@@ -37,6 +37,7 @@ namespace User_Client
         {
             var ip = "192.168.0.101";
             //var ip = "192.168.1.240";
+            //var ip = "192.168.1.240";
             var port = "1234";
             var nickname = "Vlad";
             var password = "123";
