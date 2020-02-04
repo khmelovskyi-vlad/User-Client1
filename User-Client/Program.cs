@@ -15,6 +15,9 @@ namespace User_Client
             //Console.WriteLine ($"Vlad{num, 0}");
             //Console.WriteLine($"{Console.BufferHeight}, {Console.BufferWidth}");
             //Console.ReadKey();
+            //ManagerUserInteractor managerUserInteractor = new ManagerUserInteractor();
+            //managerUserInteractor.FindPath();
+            //Console.ReadLine();
             Detector detector = new Detector();
             detector.Run();
 
