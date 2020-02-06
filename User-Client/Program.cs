@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,6 +19,10 @@ namespace User_Client
             //ManagerUserInteractor managerUserInteractor = new ManagerUserInteractor();
             //managerUserInteractor.FindPath();
             //Console.ReadLine();
+            //var firstPath = @"D:\temp\sudaa";
+            //var endPath = @"D:\temp\suda\suda";
+            //Directory.Move(firstPath, endPath);
+            //Console.ReadKey();
             Detector detector = new Detector();
             detector.Run();
 

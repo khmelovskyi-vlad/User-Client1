@@ -15,7 +15,9 @@ namespace User_Client
         public string adressName { get; set; }
         private string[] allDisks;
         private const string enter = "\r\n";
-
+        private const string message = "If you want to select a different folder or file, click C\n\r" +
+                        "If you want return to previous folder click P\r\n" +
+                        "If you want to send this file, click S";
         public string FindPath()
         {
             var allDisks = AllDisk();
@@ -35,11 +37,46 @@ namespace User_Client
                 {
                     BackFolder();
                 }
+                else if (key.Key == ConsoleKey.S)
+                {
+                    if (CheckSend(true) == "send")
+                    {
+                        return adressName;
+                    }
+                }
+                else if (key.Key == ConsoleKey.Escape)
+                {
+                    return "?";
+                }
                 else
                 {
                     Console.WriteLine("Don`t understand");
                 }
             }
+        }
+        private (bool, string) CheckPath(bool needRamove)
+        {
+            string path;
+            if (needRamove)
+            {
+                path = adressName.Remove(adressName.Length - 1);
+            }
+            else
+            {
+                path = adressName;
+            }
+            var canSend = File.Exists(path);
+            if (canSend)
+            {
+                Console.WriteLine("We can send this file, click O if you want to do it");
+            }
+            else
+            {
+                Console.WriteLine("Can`t send this file, find else");
+            }
+            return (canSend, path);
+            //var canSend = File.Exists(adressName);
+            //return canSend;
         }
         private void BackFolder()
         {
@@ -59,17 +96,22 @@ namespace User_Client
                 var (allDirectoriesAndFiles, directoryOrFileFount) = InFolderOrFile(line);
                 if (directoryOrFileFount)
                 {
-                    Console.WriteLine($"{allDirectoriesAndFiles}If you want to select a different folder or file, click C else if you want return to previous folder click P");
+                    Console.WriteLine($"{allDirectoriesAndFiles}{message}");
                     return false;
                 }
-                else if (allDirectoriesAndFiles == "Redact" && directoryOrFileFount == false)
+                else if (allDirectoriesAndFiles == "Send" && directoryOrFileFount == false)
                 {
-                    Console.WriteLine("somethingInteresing");
+                    Console.WriteLine("File will be send");
                     return true;
                     //ReadAndSendFile();
                     //SaveFile(data.ToString());
                     //BackFolder(false);
                     //return;
+                }
+                else if (allDirectoriesAndFiles == "Have file" && directoryOrFileFount == false)
+                {
+                    Console.WriteLine(message);
+                    return false;
                 }
                 else if (allDirectoriesAndFiles == "PathTooLongException" && directoryOrFileFount == false)
                 {
@@ -93,7 +135,7 @@ namespace User_Client
                 var (allDirectoriesAndFiles, diskFound) = SelectDisk(line);
                 if (diskFound)
                 {
-                    Console.WriteLine($"{allDirectoriesAndFiles}If you want to select a different folder or file, click C else if you want return to previous folder click P");
+                    Console.WriteLine($"{allDirectoriesAndFiles}{message}");
                     return;
                 }
                 else
@@ -113,8 +155,7 @@ namespace User_Client
                     adressName = adressName.Remove(adressName.Length - 1);
                 }
                 adressName = Path.GetDirectoryName(adressName);
-                allDirectoriesAndFilesOrDisks = $"{OutPutFoldersAndFiles()}If you want to select a different folder or file, " +
-                    $"click C else if you want return to previous folder click P";
+                allDirectoriesAndFilesOrDisks = $"{OutPutFoldersAndFiles()}{message}";
                 if (withRemove)
                 {
                     adressName = $"{adressName}\\";
@@ -129,11 +170,11 @@ namespace User_Client
         }
         public (string allDirectoriesAndFiles, bool directoryOrFileFount) InFolderOrFile(string fileName)
         {
-            var Redact = CheckToRedact(fileName);
-            if (Redact)
-            {
-                return ("Redact", false);
-            }
+            //var Redact = CheckToRedact(fileName);
+            //if (Redact)
+            //{
+            //    return ("Redact", false);
+            //}
             var allDirectoriesAndFiles = ($"Select a folder{enter}");
             var saveAdress = adressName;
             try
@@ -152,6 +193,24 @@ namespace User_Client
                 adressName = saveAdress;
                 return ("ArgumentException", false);
             }
+            catch (IOException ex)
+            {
+                var message = CheckSend(true);
+                if (message == "send")
+                {
+                    return ("Send", false);
+                }
+                else if (message == "have")
+                {
+                    adressName = saveAdress;
+                    return ("Have file", false);
+                }
+                else
+                {
+                    adressName = saveAdress;
+                    return ($"Bed input {ex}, try again", false);
+                }
+            }
             catch (Exception ex)
             {
                 adressName = saveAdress;
@@ -159,42 +218,61 @@ namespace User_Client
             }
             return (allDirectoriesAndFiles, true);
         }
-        private bool CheckToRedact(string fileName)
+        private string CheckSend(bool needRemove)
         {
-            if (fileName.Length > 4)
+            var (canSend, path) = CheckPath(needRemove);
+            if (canSend)
             {
-                var lastFourChar = fileName.Substring(fileName.Length - 4);
-                if (lastFourChar == ".jpg")
+                var key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.O)
                 {
-                    if (HaveFile(fileName))
-                    {
-                        adressName = $"{adressName}{fileName}";
-                        return true;
-                    }
+                    adressName = path;
+                    return "send";
+                }
+                else
+                {
+                    Console.WriteLine("No problems");
+                    return "have";
                 }
             }
-            return false;
+            return "don`t have";
         }
-        private bool HaveFile(string fileName)
-        {
-            var allFiles = Directory.GetFiles(adressName);
-            var fileNameAdress = $"{adressName}{fileName}";
-            if (allFiles.Length != 0)
-            {
-                foreach (var file in allFiles)
-                {
-                    if (fileNameAdress == file)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        public string ReadFile()
-        {
-            return $"???{File.ReadAllText(adressName)}";
-        }
+        //private bool CheckToRedact(string fileName)
+        //{
+        //    if (fileName.Length > 4)
+        //    {
+        //        var lastFourChar = fileName.Substring(fileName.Length - 4);
+        //        if (lastFourChar == ".jpg")
+        //        {
+        //            if (HaveFile(fileName))
+        //            {
+        //                adressName = $"{adressName}{fileName}";
+        //                return true;
+        //            }
+        //        }
+        //    }
+        //    return false;
+        //}
+        //private bool HaveFile(string fileName)
+        //{
+        //    var allFiles = Directory.GetFiles(adressName);
+        //    var fileNameAdress = $"{adressName}{fileName}";
+        //    if (allFiles.Length != 0)
+        //    {
+        //        foreach (var file in allFiles)
+        //        {
+        //            if (fileNameAdress == file)
+        //            {
+        //                return true;
+        //            }
+        //        }
+        //    }
+        //    return false;
+        //}
+        //public string ReadFile()
+        //{
+        //    return $"???{File.ReadAllText(adressName)}";
+        //}
         public void SaveFile(string data)
         {
             if (data == "???")

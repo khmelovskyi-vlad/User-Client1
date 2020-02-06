@@ -51,6 +51,15 @@ namespace User_Client
                         autoResetEvent.Set();
                         continue;
                     }
+                    else if (line == "?/change")
+                    {
+                        block = 1;
+                        communication.SendMessage(line);
+                        ChangeTypeGroup();
+                        block = 0;
+                        autoResetEvent.Set();
+                        continue;
+                    }
                     communication.SendMessage(line);
                     if (line == "?/end")
                     {
@@ -69,10 +78,56 @@ namespace User_Client
                 }
             }
         }
+        private void ChangeTypeGroup()
+        {
+            while (true)
+            {
+                var typeNewGroup = Console.ReadLine();
+                if (typeNewGroup == "?")
+                {
+                    communication.SendMessage(typeNewGroup);
+                    return;
+                }
+                else if (typeNewGroup == "public" || typeNewGroup == "secret")
+                {
+                    communication.SendMessage(typeNewGroup);
+                    communication.AnswerAndWriteServer();
+                }
+                else
+                {
+                    Console.WriteLine("Bed input");
+                    continue;
+                }
+                while (true)
+                {
+                    var nameNewGroup = Console.ReadLine();
+                    if (nameNewGroup == "?")
+                    {
+                        communication.SendMessage(nameNewGroup);
+                        return;
+                    }
+                    if (nameNewGroup.Length > 0)
+                    {
+                        communication.SendMessage(nameNewGroup);
+                        communication.AnswerAndWriteServer();
+                        if (communication.data.ToString() == $"New group have {typeNewGroup} type and name {nameNewGroup}")
+                        {
+                            return;
+                        }
+                        Console.WriteLine("Bed input");
+                    }
+                }
+            }
+        }
         private void SendFile()
         {
             ManagerUserInteractor managerUserInteractor = new ManagerUserInteractor();
             var path = managerUserInteractor.FindPath();
+            if (path == "?")
+            {
+                communication.SendMessage(path);
+                return;
+            }
             var fileName = Path.GetFileName(path);
             communication.SendFile(path, fileName);
         }

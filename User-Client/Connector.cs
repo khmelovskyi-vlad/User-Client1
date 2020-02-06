@@ -49,19 +49,21 @@ namespace User_Client
         }
         //private void Test(Communication communication, Socket socket)
         //{
-        //    //communication.AnswerAndWriteServer();
-        //    //Console.ReadKey();
-        //    AnswerServer(tcpSocket, communication);
+        //    AnswerServer(socket, communication);
+        //    Console.ReadKey();
         //}
+        ////private void Test(Communication communication, Socket socket)
+        ////{
+        ////    //communication.AnswerAndWriteServer();
+        ////    //Console.ReadKey();
+        ////    AnswerServer(tcpSocket, communication);
+        ////}
         //private byte[] buffer;
         //public StringBuilder data;
         //public void AnswerServer(Socket tcpSocket, Communication communication)
         //{
-        //    var s = "IMG_20191203_201515.jpg";
-        //    communication.AnswerAndWriteServer();
-        //    var nameFile = communication.data.ToString();
-        //    communication.SendMessage("ok");
-        //    using (var stream = File.Open($@"D:\temp\ok\{nameFile}", FileMode.OpenOrCreate, FileAccess.Write))
+        //    var path = @"D:\temp\ok4";
+        //    using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.Write))
         //    {
         //        buffer = new byte[256];
         //        data = new StringBuilder();
