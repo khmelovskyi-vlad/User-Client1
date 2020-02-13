@@ -29,6 +29,10 @@ namespace User_Client
                     SendMessage(line);
                     AnswerAndWriteServer();
                     ModeSelection(line);
+                    if (EndUsing)
+                    {
+                        return;
+                    }
                     //var first4 = $"{line[0]}{line[1]}{line[2]}{line[3]}";
                     //for (int i = 0; i < line.Length; i++)
                     //{
@@ -61,14 +65,11 @@ namespace User_Client
                 }
             }
         }
+        private bool EndUsing = false;
         private void ModeSelection(string message)
         {
             var serverMessage = communication.data.ToString();
-            if (serverMessage[6] == 't')
-            {
-                return;
-            }
-            else if (serverMessage == "Enter name of chat")
+            if (serverMessage == "Enter name of chat")
             {
                 FindGroup();
                 OpenChat();
@@ -81,32 +82,45 @@ namespace User_Client
                     OpenChat();
                 }
             }
+            else if (serverMessage == "You exit messanger")
+            {
+                EndUsing = true;
+            }
             else
             {
-                var first4 = $"{message[0]}{message[1]}{message[2]}{message[3]}";
-                if (first4 == "?/cc")
+                if (message.Length > 3 && message[0] == '?' && message[1] == '/')
                 {
-                    writerGroups.Run(6);
-                }
-                else if (first4 == "?/gg")
-                {
-                    writerGroups.Run(4);
-                }
-                else if (first4 == "?/ng")
-                {
-                    var openChat = CreateNewGroup();
-                    if (openChat)
+                    var first4 = $"{message[0]}{message[1]}{message[2]}{message[3]}";
+                    SendMessage("I am waiting");
+                    if (first4 == "?/cc")
                     {
-                        OpenChat();
+                        writerGroups.Run(6);
                     }
-                }
-                else
-                {
-                    writerGroups.Run(1);
-                }
-                if (communication.data.ToString() == "You connect to chat")
-                {
-                    return;
+                    else if (first4 == "?/gg")
+                    {
+                        writerGroups.Run(4);
+                    }
+                    else if (first4 == "?/ng")
+                    {
+                        var needOpenChat = CreateNewGroup();
+                        if (needOpenChat)
+                        {
+                            OpenChat();
+                        }
+                        else
+                        {
+                            EndUsing = true;
+                        }
+                    }
+                    else if(first4 == "?/pp" || first4 == "?/ch" || first4 == "?/sg" || first4 == "?/ug" || first4 == "?/ii" || first4 == "?/pg")
+                    {
+                        writerGroups.Run(1);
+                    }
+                    //if (communication.data.ToString() == "You connect to chat")
+                    //{
+                    //    return;
+                    //}
+                    AnswerAndWriteServer();
                 }
             }
         }
@@ -180,14 +194,31 @@ namespace User_Client
         {
             Chat chat = new Chat(communication);
             chat.Run();
-            Console.WriteLine("ok, good");
-            Console.ReadKey();
+            while (true)
+            {
+                var line = Console.ReadLine();
+                if (line.Length > 0)
+                {
+                    communication.SendMessage(line);
+                    communication.AnswerAndWriteServer();
+                    if (communication.data.ToString() == "You left the messanger")
+                    {
+                        EndUsing = true;
+                        return;
+                    }
+                    writerGroups.Run(6);
+                    AnswerAndWriteServer();
+                    return;
+                }
+            }
+            //Console.WriteLine("ok, good");
+            //Console.ReadKey();
         }
         private bool CreateNewGroup()
         {
             while (true)
             {
-                //AnswerAndWriteServer();
+                AnswerAndWriteServer();
                 WriteToServer("Enter a group name");
                 WriteToServer("Who do you want to invite to your group?\n\r" +
                             "If you want to check people, write ?/yes\n\r" +

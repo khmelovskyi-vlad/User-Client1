@@ -35,7 +35,7 @@ namespace User_Client
         }
         private string[] EnterData()
         {
-            var ip = "192.168.0.101";
+            var ip = "192.168.0.105";
             //var ip = "192.168.1.240";
             //var ip = "192.168.1.240";
             var port = "1234";

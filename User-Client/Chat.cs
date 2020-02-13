@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -14,15 +15,23 @@ namespace User_Client
         public Chat(Communication communication)
         {
             this.communication = communication;
+            stupidServer = new StupidServer();
+            stupidServer.Run();
+            Process myProcess = new Process();
+            myProcess.StartInfo.UseShellExecute = true;
+            myProcess.StartInfo.FileName = "User-Client";
+            myProcess.StartInfo.Arguments = "1";
+            myProcess.Start();
+            //Thread.Sleep(5000);
         }
-        Communication communication;
+        private Communication communication;
         private int check = 0;
-        AutoResetEvent autoResetEvent = new AutoResetEvent(true);
-         
+        private AutoResetEvent autoResetEvent = new AutoResetEvent(true);
+        private StupidServer stupidServer;
         private int block = 0;
         public void Run()
         {
-
+            //Interlocked
             communication.AnswerAndWriteServer();
             communication.SendMessage("ok");
             WriteMessages();
@@ -60,9 +69,19 @@ namespace User_Client
                         autoResetEvent.Set();
                         continue;
                     }
+                    else if (line == "?/invite")
+                    {
+                        block = 1;
+                        communication.SendMessage(line);
+                        InvitePerson();
+                        block = 0;
+                        autoResetEvent.Set();
+                        continue;
+                    }
                     communication.SendMessage(line);
                     if (line == "?/end")
                     {
+                        EndAnswer = true;
                         return;
                     }
                     else if (line == "?/leave a group")
@@ -75,6 +94,23 @@ namespace User_Client
                         //    return;
                         //}
                     }
+                }
+            }
+        }
+        private void InvitePerson()
+        {
+            while (true)
+            {
+                var typeNewGroup = Console.ReadLine();
+                if (typeNewGroup.Length > 0)
+                {
+                    communication.SendMessage(typeNewGroup);
+                    if (typeNewGroup == "?")
+                    {
+                        return;
+                    }
+                    communication.AnswerAndWriteServer();
+                    return;
                 }
             }
         }
@@ -146,6 +182,25 @@ namespace User_Client
                         communication.SendMessage("ok");
                         communication.ReciveFile($@"D:\temp\User\{nameFile}");
                     }
+                    else if (communication.data.ToString()[0] == 'H')
+                    {
+                        while (true)
+                        {
+                            var dateFile = Console.ReadLine();
+                            if (dateFile.Length > 0)
+                            {
+                                communication.SendMessage(dateFile);
+                                communication.AnswerAndWriteServer();
+                                if (communication.data.ToString() == "Finded")
+                                {
+                                    nameFile = CheckFile(nameFile);
+                                    communication.SendMessage("ok");
+                                    communication.ReciveFile($@"D:\temp\User\{nameFile}");
+                                }
+                                return;
+                            }
+                        }
+                    }
                     return;
                 }
             }
@@ -169,6 +224,11 @@ namespace User_Client
                 if (haveFile == false)
                 {
                     return nameFile;
+                }
+                if (i != 0)
+                {
+                    var iCount = i.ToString().Length;
+                    nameFile = nameFile.Remove(0, iCount);
                 }
                 i++;
                 nameFile = $"{i.ToString()}{nameFile}";
@@ -207,20 +267,27 @@ namespace User_Client
                 }
             }
         }
+        private bool EndAnswer = false;
         private void AnswerUsers()
         {
             while (true)
             {
                 autoResetEvent.WaitOne();
-                communication.AnswerAndWriteServer();
+                communication.AnswerServer();
+                var message = communication.data.ToString();
+                stupidServer.AnswerServer(message);
                 if (block == 1)
                 {
                     autoResetEvent.WaitOne();
                 }
-                if (communication.data.ToString() == "?/delete user")
+                if (message == "?/delete user")
                 {
                     communication.SendMessage("?/end");
                     check = 1;
+                }
+                if (EndAnswer)
+                {
+                    return;
                 }
                 autoResetEvent.Set();
             }
@@ -233,6 +300,8 @@ namespace User_Client
             for (int i = 0; i < count; i++)
             {
                 communication.AnswerAndWriteServer();
+                var message = communication.data.ToString();
+                stupidServer.AnswerServer(message);
                 communication.SendMessage("ok");
             }
         }

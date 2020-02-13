@@ -17,7 +17,7 @@ namespace User_Client
         private Socket tcpSocket { get; }
         private byte[] buffer;
         public StringBuilder data;
-        private int size = 256;
+        private const int size = 256;
         public void AnswerAndWriteServer()
         {
             AnswerServer();
