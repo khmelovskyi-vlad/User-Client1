@@ -18,6 +18,7 @@ namespace User_Client
 
             this.writerGroups = writerGroups;
         }
+        FileMaster fileMaster = new FileMaster();
         Communication communication;
         private string FilePath { get; }
         private WriterGroups writerGroups;
@@ -134,45 +135,49 @@ namespace User_Client
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                var buffer = 256;
-                StringBuilder userJson = new StringBuilder();
-                using (FileStream fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                {
-                    UserNicknameAndPassword userNicknameAndPassword = new UserNicknameAndPassword(userData[0], userData[1]);
-                    var arrayBytesRead = new byte[buffer];
-                    while (true)
-                    {
-                        var readedRealBytes = fileStream.Read(arrayBytesRead, 0, buffer);
-                        var stringArrayBytes = Encoding.Default.GetString(arrayBytesRead, 0, readedRealBytes);
-                        userJson.Append(stringArrayBytes);
-                        if (readedRealBytes < buffer)
-                        {
-                            break;
-                        }
-                    }
-                    var userNicknamesAndPasswords = JsonConvert.DeserializeObject<List<UserNicknameAndPassword>>(userJson.ToString());
-                    string userDataJson;
-                    if (userNicknamesAndPasswords == null)
-                    {
-                        List<UserNicknameAndPassword> userNicknameAndPasswordList = new List<UserNicknameAndPassword>();
-                        userNicknameAndPasswordList.Add(userNicknameAndPassword);
-                        userDataJson = JsonConvert.SerializeObject(userNicknameAndPasswordList);
-                    }
-                    else
-                    {
-                        userNicknamesAndPasswords.Add(userNicknameAndPassword);
-                        userDataJson = JsonConvert.SerializeObject(userNicknamesAndPasswords);
-                    }
-                    var arrayBytesWrite = Encoding.Default.GetBytes(userDataJson);
-                    fileStream.Seek(0, SeekOrigin.Begin);
-                    fileStream.Write(arrayBytesWrite, 0, arrayBytesWrite.Length);
-                    Console.WriteLine("Saving is successful");
-                }
+                //var buffer = 256;
+                //StringBuilder userJson = new StringBuilder();
+                UserNicknameAndPassword userNicknameAndPassword = new UserNicknameAndPassword(userData[0], userData[1]);
+                fileMaster.AddData(userNicknameAndPassword, FilePath);
+                Console.WriteLine("Saving is successful");
+                //using (FileStream fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                //{
+                //    //UserNicknameAndPassword userNicknameAndPassword = new UserNicknameAndPassword(userData[0], userData[1]);
+                //    var arrayBytesRead = new byte[buffer];
+                //    while (true)
+                //    {
+                //        var readedRealBytes = fileStream.Read(arrayBytesRead, 0, buffer);
+                //        var stringArrayBytes = Encoding.Default.GetString(arrayBytesRead, 0, readedRealBytes);
+                //        userJson.Append(stringArrayBytes);
+                //        if (readedRealBytes < buffer)
+                //        {
+                //            break;
+                //        }
+                //    }
+                //    var userNicknamesAndPasswords = JsonConvert.DeserializeObject<List<UserNicknameAndPassword>>(userJson.ToString());
+                //    string userDataJson;
+                //    if (userNicknamesAndPasswords == null)
+                //    {
+                //        List<UserNicknameAndPassword> userNicknameAndPasswordList = new List<UserNicknameAndPassword>();
+                //        userNicknameAndPasswordList.Add(userNicknameAndPassword);
+                //        userDataJson = JsonConvert.SerializeObject(userNicknameAndPasswordList);
+                //    }
+                //    else
+                //    {
+                //        userNicknamesAndPasswords.Add(userNicknameAndPassword);
+                //        userDataJson = JsonConvert.SerializeObject(userNicknamesAndPasswords);
+                //    }
+                //    var arrayBytesWrite = Encoding.Default.GetBytes(userDataJson);
+                //    fileStream.Seek(0, SeekOrigin.Begin);
+                //    fileStream.Write(arrayBytesWrite, 0, arrayBytesWrite.Length);
+                //    Console.WriteLine("Saving is successful");
+                //}
             }
         }
+        List<UserNicknameAndPassword> userNicknamesAndPasswords;
         private bool FindNeedNickAndEntrance()
         {
-            IEnumerable<UserNicknameAndPassword> userNicknamesAndPasswords = ReadUserData();
+            userNicknamesAndPasswords = fileMaster.ReadDataToUser(FilePath);
             if (userNicknamesAndPasswords != null)
             {
                 foreach (var userNicknameAndPassword in userNicknamesAndPasswords)
@@ -200,26 +205,26 @@ namespace User_Client
             }
             return false;
         }
-        private IEnumerable<UserNicknameAndPassword> ReadUserData()
-        {
-            var buffer = 256;
-            StringBuilder userJson = new StringBuilder();
-            using (FileStream fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-            {
-                var arrayBytesRead = new byte[buffer];
-                while (true)
-                {
-                    var readedRealBytes = fileStream.Read(arrayBytesRead, 0, buffer);
-                    var stringArrayBytes = Encoding.Default.GetString(arrayBytesRead, 0, readedRealBytes);
-                    userJson.Append(stringArrayBytes);
-                    if (readedRealBytes < buffer)
-                    {
-                        break;
-                    }
-                }
-                return JsonConvert.DeserializeObject<IEnumerable<UserNicknameAndPassword>>(userJson.ToString());
-            }
-        }
+        //private IEnumerable<UserNicknameAndPassword> ReadUserData()
+        //{
+        //    var buffer = 256;
+        //    StringBuilder userJson = new StringBuilder();
+        //    using (FileStream fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+        //    {
+        //        var arrayBytesRead = new byte[buffer];
+        //        while (true)
+        //        {
+        //            var readedRealBytes = fileStream.Read(arrayBytesRead, 0, buffer);
+        //            var stringArrayBytes = Encoding.Default.GetString(arrayBytesRead, 0, readedRealBytes);
+        //            userJson.Append(stringArrayBytes);
+        //            if (readedRealBytes < buffer)
+        //            {
+        //                break;
+        //            }
+        //        }
+        //        return JsonConvert.DeserializeObject<IEnumerable<UserNicknameAndPassword>>(userJson.ToString());
+        //    }
+        //}
         private bool EntrenceWithUsedNick(UserNicknameAndPassword userNicknameAndPassword)
         {
             AnswerAndWriteServer();

@@ -54,9 +54,11 @@
     <Compile Include="ConsoleUserInteractor.cs" />
     <Compile Include="Detector.cs" />
     <Compile Include="Entrance.cs" />
+    <Compile Include="FileMaster.cs" />
     <Compile Include="IUserInteractor.cs" />
     <Compile Include="FileManager.cs" />
     <Compile Include="ManagerUserInteractor.cs" />
+    <Compile Include="Types.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StupidConnector.cs" />

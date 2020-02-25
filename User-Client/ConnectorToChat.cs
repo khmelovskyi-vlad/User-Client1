@@ -69,7 +69,7 @@ namespace User_Client
         private void ModeSelection(string message)
         {
             var serverMessage = communication.data.ToString();
-            if (serverMessage == "Enter name of chat")
+            if (serverMessage == "Enter name of chat" || serverMessage == "Enter user name")
             {
                 FindGroup();
                 OpenChat();
@@ -141,18 +141,18 @@ namespace User_Client
                         AnswerAndWriteServer();
                         while (true)
                         {
-                            var line2 = Console.ReadLine();
-                            if (line2.Length > 0)
+                            var groupName = Console.ReadLine();
+                            if (groupName.Length > 0)
                             {
-                                SendMessage(line2);
+                                SendMessage(groupName);
                                 AnswerAndWriteServer();
                                 if (communication.data.ToString() == "You join the group\n\r" +
                             "If you want open chats, write: open")
                                 {
-                                    var line3 = Console.ReadLine();
-                                    if (line3.Length > 0)
+                                    var enteranceToGroup = Console.ReadLine();
+                                    if (enteranceToGroup.Length > 0)
                                     {
-                                        SendMessage(line3);
+                                        SendMessage(enteranceToGroup);
                                         AnswerAndWriteServer();
                                         if (communication.data.ToString() == "You enter to the group")
                                         {

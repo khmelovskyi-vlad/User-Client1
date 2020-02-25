@@ -29,9 +29,13 @@ namespace User_Client
         private AutoResetEvent autoResetEvent = new AutoResetEvent(true);
         private StupidServer stupidServer;
         private int block = 0;
+        private string TypeChat;
         public void Run()
         {
             //Interlocked
+            communication.AnswerServer();
+            TypeChat = communication.data.ToString();
+            communication.SendMessage("ok");
             communication.AnswerAndWriteServer();
             communication.SendMessage("ok");
             WriteMessages();
@@ -41,59 +45,68 @@ namespace User_Client
                 var line = Console.ReadLine();
                 if (line.Length > 0)
                 {
-                    if (line == "?/send")
-                    {
-                        //Interlocked check
-                        block = 1;
-                        communication.SendMessage(line);
-                        SendFile();
-                        block = 0;
-                        autoResetEvent.Set();
-                        continue;
-                    }
-                    else if (line == "?/download")
+                    if (line == "?/send" || line == "?/download" || line == "?/change" || line == "?/invite" || line == "?/delete user")
                     {
                         block = 1;
                         communication.SendMessage(line);
-                        ReciveFile();
+                        switch (line)
+                        {
+                            case "?/send":
+                                SendFile();
+                                break;
+                            case "?/download":
+                                ReciveFile();
+                                break;
+                            case "?/change":
+                                if (TypeChat == "pp" || TypeChat == "ch")
+                                {
+                                    ChangeTypeGroup();
+                                }
+                                break;
+                            case "?/invite":
+                                if (TypeChat == "pg" || TypeChat == "ug" || TypeChat == "sg")
+                                {
+                                    InvitePerson();
+                                }
+                                break;
+                            case "?/delete user":
+                                DeleteUser();
+                                break;
+                        }
                         block = 0;
                         autoResetEvent.Set();
-                        continue;
                     }
-                    else if (line == "?/change")
+                    else
                     {
-                        block = 1;
                         communication.SendMessage(line);
-                        ChangeTypeGroup();
-                        block = 0;
-                        autoResetEvent.Set();
-                        continue;
+                        switch (line)
+                        {
+                            case "?/end":
+                                EndAnswer = true;
+                                return;
+                            case "?/leave a group":
+                                return;
+                            //var successLeave = LeaveGroup();
+                            //if (successLeave)
+                            //{
+                            //    return;
+                            //}
+                            default:
+                                break;
+                        }
                     }
-                    else if (line == "?/invite")
-                    {
-                        block = 1;
-                        communication.SendMessage(line);
-                        InvitePerson();
-                        block = 0;
-                        autoResetEvent.Set();
-                        continue;
-                    }
-                    communication.SendMessage(line);
-                    if (line == "?/end")
-                    {
-                        EndAnswer = true;
-                        return;
-                    }
-                    else if (line == "?/leave a group")
-                    {
-                        return;
-
-                        //var successLeave = LeaveGroup();
-                        //if (successLeave)
-                        //{
-                        //    return;
-                        //}
-                    }
+                }
+            }
+        }
+        private void DeleteUser()
+        {
+            while (true)
+            {
+                var userNick = Console.ReadLine();
+                if (userNick.Length > 0)
+                {
+                    communication.SendMessage(userNick);
+                    return;
                 }
             }
         }
@@ -233,14 +246,6 @@ namespace User_Client
                 i++;
                 nameFile = $"{i.ToString()}{nameFile}";
             }
-        }
-        private void DeleteUser()
-        {
-
-        }
-        private void ReciveChatMessages()
-        {
-
         }
         private bool LeaveGroup()
         {

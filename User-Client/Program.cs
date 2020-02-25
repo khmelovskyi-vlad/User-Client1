@@ -11,8 +11,80 @@ namespace User_Client
 {
     class Program
     {
+        public static bool TryTo(string path, int milliSecondMax = Timeout.Infinite)
+        {
+            bool result = false;
+            DateTime dateTimestart = DateTime.Now;
+            Tuple<AutoResetEvent, FileSystemWatcher> tuple = null;
+
+            while (true)
+            {
+                try
+                {
+                    using (var file = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                    {
+                        //var writeBuf = Encoding.Default.GetBytes("test");
+                        //file.Write(writeBuf, 0, writeBuf.Length);
+
+                        var buffer = new byte[256];
+                        var s = file.Read(buffer, 0, buffer.Length);
+                        var o = Encoding.Default.GetString(buffer, 0, s);
+                        result = true;
+                    }
+                    File.SetLastWriteTime(path, DateTime.Now);
+                        break;
+                }
+                catch (IOException ex)
+                {
+                    // Init only once and only if needed. Prevent against many instantiation in case of multhreaded 
+                    // file access concurrency (if file is frequently accessed by someone else). Better memory usage.
+                    if (tuple == null)
+                    {
+                        var autoResetEvent = new AutoResetEvent(true);
+                        var fileSystemWatcher = new FileSystemWatcher(Path.GetDirectoryName(path))
+                        {
+                            EnableRaisingEvents = true
+                        };
+
+                        fileSystemWatcher.Changed +=
+                            (o, e) =>
+                            {
+                                if (Path.GetFullPath(e.FullPath) == Path.GetFullPath(path))
+                                {
+                                    autoResetEvent.Set();
+                                }
+                            };
+
+                        tuple = new Tuple<AutoResetEvent, FileSystemWatcher>(autoResetEvent, fileSystemWatcher);
+                    }
+
+                    int milliSecond = Timeout.Infinite;
+                    if (milliSecondMax != Timeout.Infinite)
+                    {
+                        milliSecond = (int)(DateTime.Now - dateTimestart).TotalMilliseconds;
+                        if (milliSecond >= milliSecondMax)
+                        {
+                            result = false;
+                            break;
+                        }
+                    }
+
+                    tuple.Item1.WaitOne(milliSecond);
+                }
+            }
+
+            if (tuple != null && tuple.Item1 != null) // Dispose of resources now (don't wait the GC).
+            {
+                tuple.Item1.Dispose();
+                tuple.Item2.Dispose();
+            }
+
+            return result;
+        }
         static void Main(string[] args)
         {
+            //TryTo(@"D:\temp\ok3\test2.txt");
+            //Console.ReadKey();
             if (args.Length != 0)
             {
                 if (args[0] == "1")

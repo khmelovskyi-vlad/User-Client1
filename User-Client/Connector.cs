@@ -15,16 +15,17 @@ namespace User_Client
         private string nickname;
         private string password;
         private Socket tcpSocket;
-        public Connector()
+        public Connector(FileMaster fileMaster)
         {
-
+            this.fileMaster = fileMaster;
         }
+        private FileMaster fileMaster;
         public void Run(string[] userInformation)
         {
             try
             {
                 InitializationClient(userInformation);
-                var tcpEndPoint = new IPEndPoint(IPAddress.Parse(ip), port);
+                var tcpEndPoint = new IPEndPoint(IPAddress.Parse(ip), this.port);
                 using (tcpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                 {
                     try
@@ -42,9 +43,9 @@ namespace User_Client
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                Console.WriteLine(ex);
             }
         }
         //private void Test(Communication communication, Socket socket)
@@ -77,10 +78,25 @@ namespace User_Client
         //}
         private void InitializationClient(string[] userInformation)
         {
-            ip = userInformation[0];
-            port = Convert.ToInt32(userInformation[1]);
-            nickname = userInformation[2];
-            password = userInformation[3];
+            try
+            {
+                ip = userInformation[0];
+                port = Convert.ToInt32(userInformation[1]);
+                SaveData();
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+        private void SaveData()
+        {
+            Console.WriteLine("If you want to save this date, click Enter");
+            var key = Console.ReadKey(true);
+            if (key.Key == ConsoleKey.Enter)
+            {
+                fileMaster.AddPortAndIP(ip, port);
+            }
         }
     }
 }
