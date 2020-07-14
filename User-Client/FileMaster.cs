@@ -45,7 +45,7 @@ namespace User_Client
                 }
                 foreach (var oneData in datas)
                 {
-                    if (oneData.Equals(data) || oneData == data)
+                    if (oneData.ToString().Equals(data.ToString()) || oneData.ToString() == data.ToString()) ////ok?
                     {
                         return;
                     }

@@ -275,14 +275,16 @@ namespace User_Client
                 var key = Console.ReadKey();
                 if (key.Key != ConsoleKey.Enter)
                 {
+                    SendMessage("No");
                     return new string[0];
                 }
+                SendMessage("Enter");
             }
         }
         private string EnterNickname()
         {
             AnswerAndWriteServer();
-            for (int i = 0; i < 10; i++)
+            while (true)
             {
                 var nickname = Console.ReadLine();
                 if (nickname.Length > 0)
@@ -293,14 +295,18 @@ namespace User_Client
                     {
                         return nickname;
                     }
+                    else if (communication.data.ToString().Last() == 'k')
+                    {
+                        SendMessage("Ok");
+                        AnswerAndWriteServer();
+                        return "";
+                    }
                 }
                 else
                 {
                     Console.WriteLine("Nickname length < 1");
                 }
             }
-            Console.WriteLine("You really want to conect to the server, if yes - click Enter");
-            return "";
         }
         //private string EnterPassword()
         //{
@@ -347,43 +353,47 @@ namespace User_Client
         //}
         private string EnterPassword()
         {
-            for (int i = 0; i <= 5; i++)
+            var i = 0;
+            StringBuilder password = new StringBuilder();
+            while (true)
             {
-                StringBuilder password = new StringBuilder();
-                while (true)
+                var key = Console.ReadKey(true);
+                if (key.Key == ConsoleKey.Enter)
                 {
-                    var key = Console.ReadKey(true);
-                    if (key.Key == ConsoleKey.Enter)
+                    i++;
+                    SendMessage(password.ToString());
+                    AnswerServer();
+                    if (communication.data.ToString() == "Ok")
                     {
-                        SendMessage(password.ToString());
-                        AnswerServer();
-                        if (communication.data.ToString() == "Ok")
-                        {
-                            SendMessage("ok");
-                            break;
-                        }
-                        password = new StringBuilder();
-                        Console.WriteLine($"\n{communication.data}");
+                        SendMessage("ok");
+                        break;
                     }
-                    else if (key.Key == ConsoleKey.Backspace)
+                    else if (communication.data.ToString() == "You really want to conect to the server, if yes - click Enter")
                     {
-                        if (password.Length > 0)
-                        {
-                            password.Remove(password.Length - 1, 1);
-                        }
+                        Console.WriteLine(communication.data);
+                        return "";
                     }
-                    else
+                    password = new StringBuilder();
+                    Console.WriteLine($"\n{communication.data}");
+                }
+                else if (key.Key == ConsoleKey.Backspace)
+                {
+                    if (password.Length > 0)
                     {
-                        Console.Write("*");
-                        password.Append(key.KeyChar);
+                        password.Remove(password.Length - 1, 1);
                     }
                 }
-                Console.WriteLine();
-                AnswerAndWriteServer();
-                if (communication.data.ToString() == "LastCheck")
+                else
                 {
-                    return password.ToString();
+                    Console.Write("*");
+                    password.Append(key.KeyChar);
                 }
+            }
+            Console.WriteLine();
+            AnswerAndWriteServer();
+            if (communication.data.ToString() == "LastCheck")
+            {
+                return password.ToString();
             }
             return "";
         }
