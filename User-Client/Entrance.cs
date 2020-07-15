@@ -137,7 +137,32 @@ namespace User_Client
             {
                 //var buffer = 256;
                 //StringBuilder userJson = new StringBuilder();
+                userNicknamesAndPasswords = fileMaster.ReadDataToUser(FilePath);
                 UserNicknameAndPassword userNicknameAndPassword = new UserNicknameAndPassword(userData[0], userData[1]);
+                if (userNicknamesAndPasswords.Count() != 0)
+                {
+                    foreach (var oneUserNicknameAndPassword in userNicknamesAndPasswords)
+                    {
+                        if (oneUserNicknameAndPassword.Nickname == userNicknameAndPassword.Nickname && 
+                            oneUserNicknameAndPassword.Password == userNicknameAndPassword.Password)
+                        {
+                            Console.WriteLine("You have this nickname and password");
+                            return;
+                        }
+                        else if (oneUserNicknameAndPassword.Nickname == userNicknameAndPassword.Nickname &&
+                            oneUserNicknameAndPassword.Password != userNicknameAndPassword.Password)
+                        {
+                            Console.WriteLine("You have this nickname but have another password,\n\r" +
+                                "If you want to change data, click 'Enter'");
+                            var chackRewriate = Console.ReadKey(true);
+                            if (chackRewriate.Key == ConsoleKey.Enter)
+                            {
+                                ////////////////////
+                            }
+                            return;
+                        }
+                    }
+                }
                 fileMaster.AddData(userNicknameAndPassword, FilePath);
                 Console.WriteLine("Saving is successful");
                 //using (FileStream fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
@@ -291,14 +316,13 @@ namespace User_Client
                 {
                     SendMessage(nickname);
                     AnswerAndWriteServer();
+                    var s = communication.data.ToString().Substring(communication.data.ToString().Length - 5);
                     if (communication.data.ToString() == "Enter password bigger than 7 symbols")
                     {
                         return nickname;
                     }
-                    else if (communication.data.ToString().Last() == 'k')
+                    else if (s == "Enter")
                     {
-                        SendMessage("Ok");
-                        AnswerAndWriteServer();
                         return "";
                     }
                 }
@@ -368,9 +392,9 @@ namespace User_Client
                         SendMessage("ok");
                         break;
                     }
-                    else if (communication.data.ToString() == "You really want to conect to the server, if yes - click Enter")
+                    else if (communication.data.ToString().Substring(communication.data.Length - 5) == "Enter")
                     {
-                        Console.WriteLine(communication.data);
+                        Console.WriteLine($"\n\r{communication.data}");
                         return "";
                     }
                     password = new StringBuilder();
@@ -446,7 +470,7 @@ namespace User_Client
             {
                 SendMessage("Yes");
                 AnswerAndWriteServer();
-                return true;
+                return false;
             }
             SendMessage("No");
             AnswerAndWriteServer();
@@ -456,7 +480,10 @@ namespace User_Client
         private bool DeleterNickname()
         {
             SendMessage("delete");
-            SignInWithoutPreviouslyEnteredNickname(false);
+            if (!SignInWithoutPreviouslyEnteredNickname(false))
+            {
+                return false;
+            }
             AnswerAndWriteServer();
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
@@ -466,16 +493,18 @@ namespace User_Client
             else
             {
                 SendMessage("No");
-            }
-            AnswerAndWriteServer();
-            if (communication.data.ToString() == "Don`t have this nickname" || communication.data.ToString() == "Index was deleter")
-            {
-                return true;
-            }
-            else
-            {
                 return false;
             }
+            AnswerAndWriteServer();
+            return false;
+            //if (communication.data.ToString() == "Don`t have this nickname" || communication.data.ToString() == "Index was deleter")
+            //{
+            //    return true;
+            //}
+            //else
+            //{
+            //    return false;
+            //}
         }
         private void AnswerAndWriteServer()
         {

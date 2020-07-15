@@ -22,12 +22,12 @@ namespace User_Client
             var successConection = entrance.ModeSelection();
             //if (!successConection)
             //{
-            //    SendMessage("?");
+            //    return false;
             //}
             writerGroups.Run(6);
             ConnectorToChat connectorToChat = new ConnectorToChat(communication, writerGroups);
             connectorToChat.SelectChat();
-            Console.ReadKey();
+            Console.ReadKey(true);
             return successConection;
         }
         //public bool Run()
