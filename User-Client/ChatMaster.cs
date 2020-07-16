@@ -20,10 +20,10 @@ namespace User_Client
         {
             Entrance entrance = new Entrance(communication, @"D:\temp\User\user.json", writerGroups);
             var successConection = entrance.ModeSelection();
-            //if (!successConection)
-            //{
-            //    return false;
-            //}
+            if (!successConection)
+            {
+                return false;
+            }
             writerGroups.Run(6);
             ConnectorToChat connectorToChat = new ConnectorToChat(communication, writerGroups);
             connectorToChat.SelectChat();

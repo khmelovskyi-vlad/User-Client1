@@ -77,5 +77,12 @@ namespace User_Client
             var buffer = Encoding.Default.GetBytes(dataJson);
             stream.Write(buffer, 0, buffer.Length);
         }
+        public void WriteData(string path, object data)
+        {
+            using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+            {
+                WriteData(path, data, stream);
+            }
+        }
     }
 }

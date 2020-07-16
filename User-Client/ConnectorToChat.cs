@@ -75,7 +75,7 @@ namespace User_Client
                 OpenChat();
             }
             else if (serverMessage == "If you want to join a group write: join\n\r" +
-                "if you want to look at the invitation, write: look")
+                "if you want to look at the invitations, write: look")
             {
                 if (AcceptTheInvitation())
                 {
@@ -128,15 +128,15 @@ namespace User_Client
         {
             while (true)
             {
-                var line = Console.ReadLine();
-                if (line.Length > 0)
+                var mode = Console.ReadLine();
+                if (mode.Length > 0)
                 {
-                    SendMessage(line);
-                    if (line == "look")
+                    SendMessage(mode);
+                    if (mode == "look")
                     {
                         writerGroups.Run(1);
                     }
-                    else if (line == "join")
+                    else if (mode == "join")
                     {
                         AnswerAndWriteServer();
                         while (true)
@@ -146,8 +146,8 @@ namespace User_Client
                             {
                                 SendMessage(groupName);
                                 AnswerAndWriteServer();
-                                if (communication.data.ToString() == "You join the group\n\r" +
-                            "If you want open chats, write: open")
+                                if (communication.data.ToString() == "You have joined to the group\n\r" +
+                                    "If you want to open chats, write: 'open'")
                                 {
                                     var enteranceToGroup = Console.ReadLine();
                                     if (enteranceToGroup.Length > 0)

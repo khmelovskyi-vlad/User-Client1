@@ -154,14 +154,23 @@ namespace User_Client
                         {
                             Console.WriteLine("You have this nickname but have another password,\n\r" +
                                 "If you want to change data, click 'Enter'");
-                            var chackRewriate = Console.ReadKey(true);
-                            if (chackRewriate.Key == ConsoleKey.Enter)
+                            var chackRewrite = Console.ReadKey(true);
+                            if (chackRewrite.Key == ConsoleKey.Enter)
                             {
-                                ////////////////////
+                                RewriteDate();
                             }
                             return;
                         }
                     }
+                }
+                void RewriteDate()
+                {
+                    userNicknamesAndPasswords = userNicknamesAndPasswords
+                        .Where(user => user.Nickname != userNicknameAndPassword.Nickname)
+                        .ToList();
+                    userNicknamesAndPasswords.Add(userNicknameAndPassword);
+                    fileMaster.WriteData(FilePath, userNicknamesAndPasswords);
+                    Console.WriteLine("Password changed");
                 }
                 fileMaster.AddData(userNicknameAndPassword, FilePath);
                 Console.WriteLine("Saving is successful");
