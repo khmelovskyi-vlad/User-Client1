@@ -80,42 +80,21 @@ namespace User_Client
             }
             else
             {
-                return SignInWithoutPreviouslyEnteredNickname(true);
+                return SignInWithoutPreviouslyEnteredNickname();
             }
         }
-        private bool SignInWithoutPreviouslyEnteredNickname(bool needLastCheck)
+        private bool SignInWithoutPreviouslyEnteredNickname()
         {
             var userData = EnterNicknameAndPassword();
             if (userData.Length == 0)
             {
-                return false;
+                return false; 
             }
             else
             {
-                if (needLastCheck)
-                {
-                    if (LastCheck())
-                    {
-                        SaveData(userData);
-                        return true;
-                    }
-                    return SignInWithoutPreviouslyEnteredNickname(true);
-                }
-                else
-                {
-                    return true;
-                }
-            }
-        }
-        private bool LastCheck()
-        {
-            SendMessage("Ok");
-            AnswerAndWriteServer();
-            if (communication.data.ToString() == "You enter to messenger")
-            {
+                AddAccountData(userData);
                 return true;
             }
-            return false;
         }
         private bool SignInWithPreviouslyEnteredNickname()
         {
@@ -126,12 +105,30 @@ namespace User_Client
             }
             else
             {
-                return SignInWithoutPreviouslyEnteredNickname(true);
+                return SignInWithoutPreviouslyEnteredNickname();
             }
         }
-        private void SaveData(string[] userData)
+        private void DeleteAccountData(string[] userData)
         {
-            Console.WriteLine("If you want to save your nickname and password, click Enter");
+            Console.WriteLine("If you want to delete your nickname and password from the device, click Enter");
+            var key = Console.ReadKey(true);
+            if (key.Key == ConsoleKey.Enter)
+            {
+                userNicknamesAndPasswords = fileMaster.ReadDataToUser(FilePath);
+                if (userNicknamesAndPasswords.Count() != 0)
+                {
+                    Console.WriteLine(userNicknamesAndPasswords.Count());
+                    userNicknamesAndPasswords = userNicknamesAndPasswords
+                        .Where(acc => acc.Nickname != userData[0] || acc.Password != userData[1])
+                        .ToList();
+                    fileMaster.WriteData(FilePath, userNicknamesAndPasswords);
+                    Console.WriteLine("Your nickname and password were deleted");
+                }
+            }
+        }
+        private void AddAccountData(string[] userData)
+        {
+            Console.WriteLine("If you want to save your nickname and password to the device, click Enter");
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
@@ -273,21 +270,9 @@ namespace User_Client
                     SendMessage(userNicknameAndPassword.Password);
                     AnswerAndWriteServer();
                     //AnswerServer();
-                    if (communication.data.ToString() == "Ok")
+                    if (communication.data.ToString() == "You enter to messenger")
                     {
-                        SendMessage(userNicknameAndPassword.Password);
-                        AnswerAndWriteServer();
-                        //AnswerServer();
-                        if (communication.data.ToString() == "LastCheck")
-                        {
-                            SendMessage(userNicknameAndPassword.Password);
-                            AnswerAndWriteServer();
-                            //AnswerAndWriteServer();
-                            if (communication.data.ToString() == "You enter to messenger")
-                            {
-                                return true;
-                            }
-                        }
+                        return true;
                     }
                 }
             }
@@ -396,12 +381,13 @@ namespace User_Client
                     i++;
                     SendMessage(password.ToString());
                     AnswerServer();
-                    if (communication.data.ToString() == "Ok")
+                    if (communication.data.ToString() == "You enter to messenger")
                     {
-                        SendMessage("ok");
-                        break;
+                        Console.WriteLine();
+                        return password.ToString();
                     }
-                    else if (communication.data.ToString().Substring(communication.data.Length - 5) == "Enter")
+                    else if (communication.data.ToString() == "This nickname is currently in use, bye" ||
+                        communication.data.ToString().Substring(communication.data.Length - 5) == "Enter")
                     {
                         Console.WriteLine($"\n\r{communication.data}");
                         return "";
@@ -422,18 +408,14 @@ namespace User_Client
                     password.Append(key.KeyChar);
                 }
             }
-            Console.WriteLine();
-            AnswerAndWriteServer();
-            if (communication.data.ToString() == "LastCheck")
-            {
-                return password.ToString();
-            }
+            //AnswerAndWriteServer();
+            //if (communication.data.ToString() == "LastCheck")
             return "";
         }
         private bool LoginTheNicknameNotUsed()
         {
             SendMessage("new");
-            return SignInWithoutPreviouslyEnteredNickname(true);
+            return SignInWithoutPreviouslyEnteredNickname();
         }
         private void ExitFromServer()
         {
@@ -461,7 +443,7 @@ namespace User_Client
                     successConnect = EscapeTheServer();
                     break;
                 case ConsoleKey.Delete:
-                    successConnect = DeleterNickname();
+                    successConnect = DeleteAccount();
                     break;
                 default:
                     SendMessage("default");
@@ -486,10 +468,11 @@ namespace User_Client
             SendMessage("Ok");
             return ModeSelection();
         }
-        private bool DeleterNickname()
+        private bool DeleteAccount()
         {
             SendMessage("delete");
-            if (!SignInWithoutPreviouslyEnteredNickname(false))
+            var userData = EnterNicknameAndPassword();
+            if (userData.Length == 0)
             {
                 return false;
             }
@@ -505,6 +488,7 @@ namespace User_Client
                 return false;
             }
             AnswerAndWriteServer();
+            DeleteAccountData(userData);
             return false;
             //if (communication.data.ToString() == "Don`t have this nickname" || communication.data.ToString() == "Index was deleter")
             //{
