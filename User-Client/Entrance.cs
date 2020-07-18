@@ -22,53 +22,7 @@ namespace User_Client
         Communication communication;
         private string FilePath { get; }
         private WriterGroups writerGroups;
-        //public bool Run()
-        //{
-        //    ConnectorToChat connectorToChat = new ConnectorToChat(communication, @"D:\temp\User\user.json");
-        //    var successConection = connectorToChat.ModeSelection();
-        //    //if (!successConection)
-        //    //{
-        //    //    SendMessage("?");
-        //    //}
-        //    writerGroups.Run(6);
-        //    SelectChat();
-        //    Console.ReadKey();
-        //    return successConection;
-        //}
-        //private void WritePublickChats()
-        //{
-        //    Console.SetCursorPosition(MaxWidth/2, Console.CursorTop);
-        //    WriteSaveChats("Public groups:");
-        //    Console.SetCursorPosition(0, Console.CursorTop);
-        //}
-        //private void WriteSaveChats(string groups)
-        //{
-        //    AnswerAndWriteServer();
-        //    SendMessage("Ok");
-        //    AnswerServer();
-        //    var countChats = Convert.ToInt32(data);
-        //    if (countChats == 0)
-        //    {
-        //        SendMessage("Ok");
-        //        Console.WriteLine("(don`t have)");
-        //    }
-        //    else
-        //    {
-        //        SendMessage("Send goups");
-        //        for (int i = 0; i < countChats; i++)
-        //        {
-        //            AnswerServer();
-        //            if (data.Length > countChats / 2)
-        //            {
-        //                WriteBigNameChat(MaxWidth);
-        //                continue;
-        //            }
-        //            Console.WriteLine($"{data}\n\t"); ////////////////////// data - stringbuilder
-        //            SendMessage("+");
-        //        }
-        //    }
-        //}
-        private bool LoginTheNicknameUsed()
+        private bool LoginRegisteredAccount()
         {
             SendMessage("using");
             Console.WriteLine("Sign in with your previously entered nickname?" +
@@ -76,14 +30,14 @@ namespace User_Client
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                return SignInWithPreviouslyEnteredNickname();
+                return SignInWithSavedAccount();
             }
             else
             {
-                return SignInWithoutPreviouslyEnteredNickname();
+                return SignInWithoutSavedAccount();
             }
         }
-        private bool SignInWithoutPreviouslyEnteredNickname()
+        private bool SignInWithoutSavedAccount()
         {
             var userData = EnterNicknameAndPassword();
             if (userData.Length == 0)
@@ -96,16 +50,16 @@ namespace User_Client
                 return true;
             }
         }
-        private bool SignInWithPreviouslyEnteredNickname()
+        private bool SignInWithSavedAccount()
         {
-            var finded = FindNeedNickAndEntrance();
+            var finded = FindAccountAndEnter();
             if (finded)
             {
                 return true;
             }
             else
             {
-                return SignInWithoutPreviouslyEnteredNickname();
+                return SignInWithoutSavedAccount();
             }
         }
         private void DeleteAccountData(string[] userData)
@@ -132,8 +86,6 @@ namespace User_Client
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                //var buffer = 256;
-                //StringBuilder userJson = new StringBuilder();
                 userNicknamesAndPasswords = fileMaster.ReadDataToUser(FilePath);
                 UserNicknameAndPassword userNicknameAndPassword = new UserNicknameAndPassword(userData[0], userData[1]);
                 if (userNicknamesAndPasswords.Count() != 0)
@@ -171,42 +123,10 @@ namespace User_Client
                 }
                 fileMaster.AddData(userNicknameAndPassword, FilePath);
                 Console.WriteLine("Saving is successful");
-                //using (FileStream fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-                //{
-                //    //UserNicknameAndPassword userNicknameAndPassword = new UserNicknameAndPassword(userData[0], userData[1]);
-                //    var arrayBytesRead = new byte[buffer];
-                //    while (true)
-                //    {
-                //        var readedRealBytes = fileStream.Read(arrayBytesRead, 0, buffer);
-                //        var stringArrayBytes = Encoding.Default.GetString(arrayBytesRead, 0, readedRealBytes);
-                //        userJson.Append(stringArrayBytes);
-                //        if (readedRealBytes < buffer)
-                //        {
-                //            break;
-                //        }
-                //    }
-                //    var userNicknamesAndPasswords = JsonConvert.DeserializeObject<List<UserNicknameAndPassword>>(userJson.ToString());
-                //    string userDataJson;
-                //    if (userNicknamesAndPasswords == null)
-                //    {
-                //        List<UserNicknameAndPassword> userNicknameAndPasswordList = new List<UserNicknameAndPassword>();
-                //        userNicknameAndPasswordList.Add(userNicknameAndPassword);
-                //        userDataJson = JsonConvert.SerializeObject(userNicknameAndPasswordList);
-                //    }
-                //    else
-                //    {
-                //        userNicknamesAndPasswords.Add(userNicknameAndPassword);
-                //        userDataJson = JsonConvert.SerializeObject(userNicknamesAndPasswords);
-                //    }
-                //    var arrayBytesWrite = Encoding.Default.GetBytes(userDataJson);
-                //    fileStream.Seek(0, SeekOrigin.Begin);
-                //    fileStream.Write(arrayBytesWrite, 0, arrayBytesWrite.Length);
-                //    Console.WriteLine("Saving is successful");
-                //}
             }
         }
         List<UserNicknameAndPassword> userNicknamesAndPasswords;
-        private bool FindNeedNickAndEntrance()
+        private bool FindAccountAndEnter()
         {
             userNicknamesAndPasswords = fileMaster.ReadDataToUser(FilePath);
             if (userNicknamesAndPasswords != null)
@@ -224,7 +144,7 @@ namespace User_Client
                     {
                         if (line == userNicknameAndPassword.Nickname)
                         {
-                            return EntrenceWithUsedNick(userNicknameAndPassword);
+                            return EnterWithSavedAccount(userNicknameAndPassword);
                         }
                     }
                     Console.WriteLine($"Don`t have this nickname, number of attempts left: {numberOfAttempts - i}");
@@ -236,40 +156,17 @@ namespace User_Client
             }
             return false;
         }
-        //private IEnumerable<UserNicknameAndPassword> ReadUserData()
-        //{
-        //    var buffer = 256;
-        //    StringBuilder userJson = new StringBuilder();
-        //    using (FileStream fileStream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-        //    {
-        //        var arrayBytesRead = new byte[buffer];
-        //        while (true)
-        //        {
-        //            var readedRealBytes = fileStream.Read(arrayBytesRead, 0, buffer);
-        //            var stringArrayBytes = Encoding.Default.GetString(arrayBytesRead, 0, readedRealBytes);
-        //            userJson.Append(stringArrayBytes);
-        //            if (readedRealBytes < buffer)
-        //            {
-        //                break;
-        //            }
-        //        }
-        //        return JsonConvert.DeserializeObject<IEnumerable<UserNicknameAndPassword>>(userJson.ToString());
-        //    }
-        //}
-        private bool EntrenceWithUsedNick(UserNicknameAndPassword userNicknameAndPassword)
+        private bool EnterWithSavedAccount(UserNicknameAndPassword userNicknameAndPassword)
         {
-            AnswerAndWriteServer();
-            //AnswerServer();
+            AnswerServer();
             if (communication.data.ToString() == "Enter a nickname")
             {
                 SendMessage(userNicknameAndPassword.Nickname);
-                AnswerAndWriteServer();
-                //AnswerServer();
+                AnswerServer();
                 if (communication.data.ToString() == "Enter password bigger than 7 symbols")
                 {
                     SendMessage(userNicknameAndPassword.Password);
                     AnswerAndWriteServer();
-                    //AnswerServer();
                     if (communication.data.ToString() == "You enter to messenger")
                     {
                         return true;
@@ -326,49 +223,6 @@ namespace User_Client
                 }
             }
         }
-        //private string EnterPassword()
-        //{
-        //    for (int i = 0; i <= 5; i++)
-        //    {
-        //        StringBuilder password = new StringBuilder();
-        //        while (true)
-        //        {
-        //            var key = Console.ReadKey(true);
-        //            if (key.Key == ConsoleKey.Enter)
-        //            {
-        //                if (password.Length > 7)
-        //                {
-        //                    SendMessage(password.ToString());
-        //                    break;
-        //                }
-        //                else
-        //                {
-        //                    password = new StringBuilder();
-        //                    Console.WriteLine("Password length < 7, enter another password");
-        //                }
-        //            }
-        //            else if (key.Key == ConsoleKey.Backspace)
-        //            {
-        //                if (password.Length > 0)
-        //                {
-        //                    password.Remove(password.Length - 1, 1);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                Console.Write("*");
-        //                password.Append(key.KeyChar);
-        //            }
-        //        }
-        //        Console.WriteLine();
-        //        AnswerAndWriteServer();
-        //        if (data.ToString() == "LastCheck")
-        //        {
-        //            return password.ToString();
-        //        }
-        //    }
-        //    return "";
-        //}
         private string EnterPassword()
         {
             var i = 0;
@@ -408,20 +262,13 @@ namespace User_Client
                     password.Append(key.KeyChar);
                 }
             }
-            //AnswerAndWriteServer();
-            //if (communication.data.ToString() == "LastCheck")
-            return "";
         }
-        private bool LoginTheNicknameNotUsed()
+        private bool LoginNewAccount()
         {
             SendMessage("new");
-            return SignInWithoutPreviouslyEnteredNickname();
+            return SignInWithoutSavedAccount();
         }
         private void ExitFromServer()
-        {
-
-        }
-        private void DeleteNicknameInServer()
         {
 
         }
@@ -434,13 +281,13 @@ namespace User_Client
             switch (key.Key)
             {
                 case ConsoleKey.Enter:
-                    successConnect = LoginTheNicknameUsed();
+                    successConnect = LoginRegisteredAccount();
                     break;
                 case ConsoleKey.Tab:
-                    successConnect = LoginTheNicknameNotUsed();
+                    successConnect = LoginNewAccount();
                     break;
                 case ConsoleKey.Escape:
-                    successConnect = EscapeTheServer();
+                    successConnect = EscapeServer();
                     break;
                 case ConsoleKey.Delete:
                     successConnect = DeleteAccount();
@@ -452,7 +299,7 @@ namespace User_Client
             }
             return successConnect;
         }
-        private bool EscapeTheServer()
+        private bool EscapeServer()
         {
             SendMessage("escape");
             AnswerAndWriteServer();
@@ -490,14 +337,6 @@ namespace User_Client
             AnswerAndWriteServer();
             DeleteAccountData(userData);
             return false;
-            //if (communication.data.ToString() == "Don`t have this nickname" || communication.data.ToString() == "Index was deleter")
-            //{
-            //    return true;
-            //}
-            //else
-            //{
-            //    return false;
-            //}
         }
         private void AnswerAndWriteServer()
         {
@@ -512,7 +351,5 @@ namespace User_Client
         {
             communication.SendMessage(message);
         }
-
-
     }
 }

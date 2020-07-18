@@ -21,7 +21,7 @@ namespace User_Client
         public void SelectChat()
         {
             AnswerAndWriteServer();
-            while (true)
+            while (!EndUsing)
             {
                 var line = Console.ReadLine();
                 if (line.Length != 0)
@@ -29,10 +29,11 @@ namespace User_Client
                     SendMessage(line);
                     AnswerAndWriteServer();
                     ModeSelection(line);
-                    if (EndUsing)
-                    {
-                        return;
-                    }
+                    //if (EndUsing)
+                    //{
+                    //    return;
+                    //}
+
                     //var first4 = $"{line[0]}{line[1]}{line[2]}{line[3]}";
                     //for (int i = 0; i < line.Length; i++)
                     //{
@@ -90,7 +91,7 @@ namespace User_Client
             {
                 if (message.Length > 3 && message[0] == '?' && message[1] == '/')
                 {
-                    var first4 = $"{message[0]}{message[1]}{message[2]}{message[3]}";
+                    var first4 = message.Substring(0, 4);
                     SendMessage("I am waiting");
                     if (first4 == "?/cc")
                     {
