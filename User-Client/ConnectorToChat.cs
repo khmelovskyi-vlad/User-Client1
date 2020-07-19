@@ -33,36 +33,6 @@ namespace User_Client
                     //{
                     //    return;
                     //}
-
-                    //var first4 = $"{line[0]}{line[1]}{line[2]}{line[3]}";
-                    //for (int i = 0; i < line.Length; i++)
-                    //{
-
-                    //}
-                    //if (first4 == "?/cc")
-                    //{
-                    //    ReciveChats(6);
-                    //}
-                    //else if (first4 == "?/gg")
-                    //{
-                    //    ReciveChats(4);
-                    //}
-                    //else if(first4 == "?/ng")
-                    //{
-                    //    var openChat = CreateNewGroup();
-                    //    if (openChat)
-                    //    {
-                    //        OpenChat();
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    ReciveChats(1);
-                    //}
-                    //if (communication.data.ToString() == "You connect to chat")
-                    //{
-                    //    return;
-                    //}
                 }
             }
         }
@@ -93,15 +63,7 @@ namespace User_Client
                 {
                     var first4 = message.Substring(0, 4);
                     SendMessage("I am waiting");
-                    if (first4 == "?/cc")
-                    {
-                        writerGroups.Run(6);
-                    }
-                    else if (first4 == "?/gg")
-                    {
-                        writerGroups.Run(4);
-                    }
-                    else if (first4 == "?/ng")
+                    if (message == "?/ng")
                     {
                         var needOpenChat = CreateNewGroup();
                         if (needOpenChat)
@@ -112,6 +74,14 @@ namespace User_Client
                         {
                             EndUsing = true;
                         }
+                    }
+                    else if (first4 == "?/gg")
+                    {
+                        writerGroups.Run(4);
+                    }
+                    else if (first4 == "?/cc")
+                    {
+                        writerGroups.Run(6);
                     }
                     else if(first4 == "?/pp" || first4 == "?/ch" || first4 == "?/sg" || first4 == "?/ug" || first4 == "?/ii" || first4 == "?/pg")
                     {
