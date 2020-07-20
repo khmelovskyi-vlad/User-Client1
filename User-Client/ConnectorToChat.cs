@@ -52,6 +52,10 @@ namespace User_Client
                 {
                     OpenChat();
                 }
+                else
+                {
+                    EndUsing = true;
+                }
             }
             else if (serverMessage == "You exit messanger")
             {
