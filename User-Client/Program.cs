@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -81,8 +82,86 @@ namespace User_Client
 
             return result;
         }
+        private static void TestPipeMessenger()
+        {
+            Process pipeClient = new Process();
+            pipeClient.StartInfo.FileName = "User-Client.exe";
+            pipeClient.StartInfo.Arguments = "1";
+            pipeClient.Start();
+
+            using (NamedPipeServerStream pipeServer =
+                new NamedPipeServerStream("testpipe", PipeDirection.Out))
+            {
+                Console.WriteLine("NamedPipeServerStream object created.");
+
+                // Wait for a client to connect
+                Console.Write("Waiting for client connection...");
+                pipeServer.WaitForConnection();
+
+                Console.WriteLine("Client connected.");
+                try
+                {
+                    // Read user input and send that to the client process.
+                    using (StreamWriter sw = new StreamWriter(pipeServer))
+                    {
+                        sw.AutoFlush = true;
+                        while (true)
+                        {
+                            Console.Write("Enter text: ");
+                            var line = Console.ReadLine();
+                            sw.WriteLine(line);
+                            if (line == "all")
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+                // Catch the IOException that is raised if the pipe is broken
+                // or disconnected.
+                catch (IOException e)
+                {
+                    Console.WriteLine("ERROR: {0}", e.Message);
+                }
+            }
+        }
+        private static void TestPipeClient(string[] args)
+        {
+            using (NamedPipeClientStream pipeClient =
+                new NamedPipeClientStream(".", "testpipe", PipeDirection.In))
+            {
+
+                // Connect to the pipe or wait until the pipe is available.
+                Console.Write("Attempting to connect to pipe...");
+                pipeClient.Connect();
+
+                Console.WriteLine("Connected to pipe.");
+                Console.WriteLine("There are currently {0} pipe server instances open.",
+                   pipeClient.NumberOfServerInstances);
+                using (StreamReader sr = new StreamReader(pipeClient))
+                {
+                    // Display the read text to the console
+                    string temp;
+                    while ((temp = sr.ReadLine()) != null)
+                    {
+                        Console.WriteLine("Received from server: {0}", temp);
+                    }
+                }
+            }
+            Console.Write("Press Enter to continue...");
+            Console.ReadLine();
+        }
         static void Main(string[] args)
         {
+            //if (args.Length == 0)
+            //{
+            //    Console.ReadKey();
+            //    TestPipeMessenger();
+            //}
+            //else if (args[0] == "1")
+            //{
+            //    TestPipeClient(args);
+            //}
             //TryTo(@"D:\temp\ok3\test2.txt");
             //Console.ReadKey();
             if (args.Length != 0)
