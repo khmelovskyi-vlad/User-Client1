@@ -68,7 +68,7 @@ namespace User_Client
             var canSend = File.Exists(path);
             if (canSend)
             {
-                Console.WriteLine("We can send this file, click O if you want to do it");
+                Console.WriteLine("We can send this file, click 'S' if you want to do it");
             }
             else
             {
@@ -224,7 +224,7 @@ namespace User_Client
             if (canSend)
             {
                 var key = Console.ReadKey(true);
-                if (key.Key == ConsoleKey.O)
+                if (key.Key == ConsoleKey.S)
                 {
                     adressName = path;
                     return "send";
