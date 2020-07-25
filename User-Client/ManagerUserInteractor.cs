@@ -46,7 +46,7 @@ namespace User_Client
                 }
                 else if (key.Key == ConsoleKey.Escape)
                 {
-                    return "?";
+                    return "?/escape";
                 }
                 else
                 {

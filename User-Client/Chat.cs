@@ -166,7 +166,7 @@ namespace User_Client
         {
             ManagerUserInteractor managerUserInteractor = new ManagerUserInteractor();
             var path = managerUserInteractor.FindPath();
-            if (path == "?")
+            if (path == "?/escape")
             {
                 communication.SendMessage(path);
                 return;
