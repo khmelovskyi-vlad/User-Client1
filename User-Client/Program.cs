@@ -168,8 +168,10 @@ namespace User_Client
             {
                 if (args[0] == "1")
                 {
-                    StupidConnector stupidConnector = new StupidConnector();
-                    stupidConnector.Run();
+                    SecondWindowClien secondWindowClien = new SecondWindowClien();
+                    secondWindowClien.Run();
+                    //StupidConnector stupidConnector = new StupidConnector();
+                    //stupidConnector.Run();
                 }
                 //add other options here and below              
             }

@@ -15,21 +15,25 @@ namespace User_Client
         public Chat(Communication communication)
         {
             this.communication = communication;
-            stupidServer = new StupidServer();
-            stupidServer.Run();
-            Process myProcess = new Process();
-            myProcess.StartInfo.UseShellExecute = true;
-            myProcess.StartInfo.FileName = "User-Client";
-            myProcess.StartInfo.Arguments = "1";
-            myProcess.Start();
+            //stupidServer = new StupidServer();
+            secondWindowServer = new SecondWindowServer();
+            //stupidServer.Run();
+            //Process myProcess = new Process();
+            //myProcess.StartInfo.UseShellExecute = true;
+            //myProcess.StartInfo.FileName = "User-Client";
+            //myProcess.StartInfo.Arguments = "1";
+            //myProcess.Start();
             //Thread.Sleep(5000);
         }
         private Communication communication;
-        private StupidServer stupidServer;
+        //private StupidServer stupidServer;
+        private SecondWindowServer secondWindowServer;
         private string TypeChat;
         public void Run()
         {
             //Interlocked
+            Task.Run(() => secondWindowServer.Run());
+            secondWindowServer.autoResetCreated.WaitOne();
             communication.AnswerServer();
             TypeChat = communication.data.ToString();
             communication.SendMessage("ok");
@@ -42,7 +46,8 @@ namespace User_Client
                 var line = Console.ReadLine();
                 if (line.Length > 0)
                 {
-                    if (line == "?/send" || line == "?/download" || line == "?/change" || line == "?/invite" || line == "?/delete user")
+                    if (line == "?/send" || line == "?/download" || line == "?/change" || line == "?/invite" || line == "?/delete user"
+                        || line == "?/leave a group" || line == "?/end")
                     {
                         autoResetMessage.WaitOne();
                         communication.SendMessage(line);
@@ -66,30 +71,26 @@ namespace User_Client
                                     InvitePerson();
                                 }
                                 break;
-                            case "?/delete user":
+                            case "?/delete":
                                 DeleteUser();
                                 break;
+                            case "?/leave a group":
+                                var successLeave = LeaveGroup();
+                                if (successLeave)
+                                {
+                                    autoResetMessage.Set();
+                                    return;
+                                }
+                                break;
+                            case "?/end":
+                                autoResetMessage.Set();
+                                return;
                         }
                         autoResetMessage.Set();
                     }
                     else
                     {
                         communication.SendMessage(line);
-                        switch (line)
-                        {
-                            case "?/end":
-                                EndAnswer = true;
-                                return;
-                            case "?/leave a group":
-                                return;
-                            //var successLeave = LeaveGroup();
-                            //if (successLeave)
-                            //{
-                            //    return;
-                            //}
-                            default:
-                                break;
-                        }
                     }
                 }
             }
@@ -102,6 +103,8 @@ namespace User_Client
                 if (userNick.Length > 0)
                 {
                     communication.SendMessage(userNick);
+                    communication.AnswerAndWriteServer();
+                    communication.SendMessage("Okey");
                     return;
                 }
             }
@@ -114,10 +117,6 @@ namespace User_Client
                 if (typeNewGroup.Length > 0)
                 {
                     communication.SendMessage(typeNewGroup);
-                    if (typeNewGroup == "?")
-                    {
-                        return;
-                    }
                     communication.AnswerAndWriteServer();
                     return;
                 }
@@ -250,23 +249,17 @@ namespace User_Client
         }
         private bool LeaveGroup()
         {
-            communication.AnswerAndWriteServer();
             while (true)
             {
                 var line = Console.ReadLine();
-                if (check == 1)
-                {
-                    return false;
-                }
                 if (line.Length > 0)
                 {
                     communication.SendMessage(line);
-                    communication.AnswerAndWriteServer();
-                    if (communication.data.ToString() == "You leave a chat")
+                    if (line == "yes")
                     {
                         return true;
                     }
-                    else if (communication.data.ToString() == "Ok, you did not to leave chat")
+                    else
                     {
                         return false;
                     }
@@ -274,23 +267,23 @@ namespace User_Client
             }
         }
         private AutoResetEvent autoResetMessage = new AutoResetEvent(true);
-        private bool EndAnswer = false;
-        private int check = 0;
+        public AutoResetEvent autoResetConnectAgain = new AutoResetEvent(false);
         private void AnswerUsers()
         {
             while (true)
             {
                 communication.AnswerServer();
                 var message = communication.data.ToString();
-                stupidServer.AnswerServer(message);
+                secondWindowServer.Write(message);
+                //stupidServer.AnswerServer(message);
                 autoResetMessage.WaitOne();
-                if (message == "?/delete user")
+                if (message == "?/delete")
                 {
                     communication.SendMessage("?/end");
-                    check = 1;
                 }
-                if (EndAnswer)
+                else if (message == "?/you left the chat")
                 {
+                    autoResetConnectAgain.Set();
                     return;
                 }
                 autoResetMessage.Set();
@@ -303,9 +296,11 @@ namespace User_Client
             var count = Convert.ToInt32(communication.data.ToString());
             for (int i = 0; i < count; i++)
             {
-                communication.AnswerAndWriteServer();
+                communication.AnswerServer();
+                //communication.AnswerAndWriteServer();
                 var message = communication.data.ToString();
-                stupidServer.AnswerServer(message);
+                secondWindowServer.Write(message);
+                //stupidServer.AnswerServer(message);
                 communication.SendMessage("ok");
             }
         }

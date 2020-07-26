@@ -11,7 +11,7 @@ namespace User_Client
 {
     class StupidConnector
     {
-        private string ip = "192.168.1.12";
+        private string ip = "192.168.1.11";
         private int port = 1235;
         private Socket tcpSocket;
         public void Run()

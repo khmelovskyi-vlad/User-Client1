@@ -169,6 +169,9 @@ namespace User_Client
         {
             Chat chat = new Chat(communication);
             chat.Run();
+            chat.autoResetConnectAgain.WaitOne();
+            communication.SendMessage("I left the chat");
+            communication.AnswerAndWriteServer();
             while (true)
             {
                 var line = Console.ReadLine();
@@ -176,6 +179,7 @@ namespace User_Client
                 {
                     communication.SendMessage(line);
                     communication.AnswerAndWriteServer();
+                    communication.SendMessage("Okey");
                     if (communication.data.ToString() == "You left the messanger")
                     {
                         EndUsing = true;
