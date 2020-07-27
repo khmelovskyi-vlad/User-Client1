@@ -46,7 +46,7 @@ namespace User_Client
                 var line = Console.ReadLine();
                 if (line.Length > 0)
                 {
-                    if (line == "?/send" || line == "?/download" || line == "?/change" || line == "?/invite" || line == "?/delete user"
+                    if (line == "?/send" || line == "?/download" || line == "?/change" || line == "?/invite" || line == "?/delete"
                         || line == "?/leave a group" || line == "?/end")
                     {
                         autoResetMessage.WaitOne();
@@ -63,16 +63,20 @@ namespace User_Client
                                 if (TypeChat == "pp" || TypeChat == "ch")
                                 {
                                     ChangeTypeGroup();
+                                    break;
                                 }
-                                break;
+                                autoResetMessage.Set();
+                                continue;
                             case "?/invite":
                                 if (TypeChat == "pg" || TypeChat == "ug" || TypeChat == "sg")
                                 {
-                                    InvitePerson();
+                                    InviteOrDeleteUser();
+                                    break;
                                 }
-                                break;
+                                autoResetMessage.Set();
+                                continue;
                             case "?/delete":
-                                DeleteUser();
+                                InviteOrDeleteUser();
                                 break;
                             case "?/leave a group":
                                 var successLeave = LeaveGroup();
@@ -86,6 +90,8 @@ namespace User_Client
                                 autoResetMessage.Set();
                                 return;
                         }
+                        communication.SendMessage("okey");
+                        WriteMessages();
                         autoResetMessage.Set();
                     }
                     else
@@ -95,7 +101,7 @@ namespace User_Client
                 }
             }
         }
-        private void DeleteUser()
+        private void InviteOrDeleteUser()
         {
             while (true)
             {
@@ -103,21 +109,7 @@ namespace User_Client
                 if (userNick.Length > 0)
                 {
                     communication.SendMessage(userNick);
-                    communication.AnswerAndWriteServer();
-                    communication.SendMessage("Okey");
-                    return;
-                }
-            }
-        }
-        private void InvitePerson()
-        {
-            while (true)
-            {
-                var typeNewGroup = Console.ReadLine();
-                if (typeNewGroup.Length > 0)
-                {
-                    communication.SendMessage(typeNewGroup);
-                    communication.AnswerAndWriteServer();
+                    communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                     return;
                 }
             }
@@ -130,14 +122,14 @@ namespace User_Client
                 if (typeNewGroup == "public" || typeNewGroup == "secret")
                 {
                     communication.SendMessage(typeNewGroup);
-                    communication.AnswerAndWriteServer();
+                    communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                     while (true)
                     {
                         var nameNewGroup = Console.ReadLine();
                         if (nameNewGroup.Length > 0)
                         {
                             communication.SendMessage(nameNewGroup);
-                            communication.AnswerAndWriteServer();
+                            communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                             if (communication.data.ToString() == $"New group have {typeNewGroup} type and name {nameNewGroup}")
                             {
                                 return;
@@ -172,7 +164,7 @@ namespace User_Client
             }
             var fileName = Path.GetFileName(path);
             communication.SendFile(path, fileName);
-            communication.AnswerAndWriteServer();
+            communication.AnswerAndWriteToSecndWindow(secondWindowServer);
         }
         private void ReceiveFile()
         {
@@ -182,7 +174,7 @@ namespace User_Client
                 if (fileName.Length > 0)
                 {
                     communication.SendMessage(fileName);
-                    communication.AnswerAndWriteServer();
+                    communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                     CheckFindedFile(fileName);
                     return;
                 }
@@ -202,7 +194,7 @@ namespace User_Client
                     if (dateFile.Length > 0)
                     {
                         communication.SendMessage(dateFile);
-                        communication.AnswerAndWriteServer();
+                        communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                         if (communication.data.ToString() == "Finded")
                         {
                             FindNameAndRecive();

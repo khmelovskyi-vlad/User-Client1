@@ -19,6 +19,11 @@ namespace User_Client
         private byte[] buffer;
         public StringBuilder data;
         private const int size = 256;
+        public void AnswerAndWriteToSecndWindow(SecondWindowServer secondWindowServer)
+        {
+            AnswerServer();
+            secondWindowServer.Write(data.ToString());
+        }
         public void AnswerAndWriteServer()
         {
             AnswerServer();
@@ -42,9 +47,10 @@ namespace User_Client
         {
             SendMessage(fileName);
             AnswerServer();
-            //var length = new FileInfo(path).Length;
-            //var lengthByte = BitConverter.GetBytes(length);
-            tcpSocket.SendFile(path);
+            var length = new FileInfo(path).Length;
+            var lengthByte = BitConverter.GetBytes(length);
+            //tcpSocket.SendFile(path);
+            tcpSocket.SendFile(path, lengthByte, null, TransmitFileOptions.UseKernelApc);
             //tcpSocket.BeginSendFile(path, lengthByte, null, TransmitFileOptions.UseKernelApc, SendFileCallback, tcpSocket);
             //resetSend.WaitOne();
         }
