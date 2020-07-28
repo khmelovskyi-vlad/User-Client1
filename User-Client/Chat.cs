@@ -15,18 +15,9 @@ namespace User_Client
         public Chat(Communication communication)
         {
             this.communication = communication;
-            //stupidServer = new StupidServer();
             secondWindowServer = new SecondWindowServer();
-            //stupidServer.Run();
-            //Process myProcess = new Process();
-            //myProcess.StartInfo.UseShellExecute = true;
-            //myProcess.StartInfo.FileName = "User-Client";
-            //myProcess.StartInfo.Arguments = "1";
-            //myProcess.Start();
-            //Thread.Sleep(5000);
         }
         private Communication communication;
-        //private StupidServer stupidServer;
         private SecondWindowServer secondWindowServer;
         private string TypeChat;
         public void Run()
@@ -267,7 +258,6 @@ namespace User_Client
                 communication.AnswerServer();
                 var message = communication.data.ToString();
                 secondWindowServer.Write(message);
-                //stupidServer.AnswerServer(message);
                 autoResetMessage.WaitOne();
                 if (message == "?/delete")
                 {
@@ -289,10 +279,7 @@ namespace User_Client
             for (int i = 0; i < count; i++)
             {
                 communication.AnswerServer();
-                //communication.AnswerAndWriteServer();
-                var message = communication.data.ToString();
-                secondWindowServer.Write(message);
-                //stupidServer.AnswerServer(message);
+                secondWindowServer.Write(communication.data.ToString());
                 communication.SendMessage("ok");
             }
         }

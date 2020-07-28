@@ -14,22 +14,9 @@ namespace User_Client
         }
         Communication communication;
         private int MaxWidth { get { return Console.BufferWidth; } }
-        //ReciveChats
         public void Run(int count)
         {
             WriteGroups(count);
-            //SendMessage("ok");
-            //if (data.ToString() == "Don`t have entering chats")
-            //{
-            //    Console.WriteLine("Secreat groups:\n\t(don`t have)\n\tYour groups:\n\t(don`t have)");
-            //    AnswerServer();
-            //}
-            //else
-            //{
-            //    WriteSaveChats("Secreat groups:");
-            //    WriteSaveChats("Your groups:");
-            //}
-            //WritePublickChats();
         }
         private void WriteGroups(int count)
         {
@@ -88,7 +75,7 @@ namespace User_Client
                     }
                     else
                     {
-                        WriteInSomePosition($"{communication.data}", weigh, top); ////////////////////// data - stringbuilder
+                        WriteInSomePosition($"{communication.data}", weigh, top);
                     }
                     SendMessage("+");
                     top++;

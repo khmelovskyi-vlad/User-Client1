@@ -41,6 +41,10 @@ namespace User_Client
         }
         public void SendMessage(string message)
         {
+            if (message == "??")
+            {
+                throw new OperationCanceledException();
+            }
             tcpSocket.Send(Encoding.ASCII.GetBytes(message));
         }
         public void SendFile(string path, string fileName)

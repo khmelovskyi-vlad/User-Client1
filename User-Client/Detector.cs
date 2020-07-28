@@ -40,22 +40,6 @@ namespace User_Client
         {
             ReadShowData(fileMaster, @"D:\temp\User\IPs.json", "IPs:");
             ReadShowData(fileMaster, @"D:\temp\User\ports.json", "Ports:");
-            //var IPs = (List<string>)fileMaster.ReadData(@"D:\temp\User\IPs.json");
-            //if (IPs != null)
-            //{
-            //    foreach (var IP in IPs)
-            //    {
-            //        Console.WriteLine(IP);
-            //    }
-            //}
-            //var ports = (List<int>)fileMaster.ReadData(@"D:\temp\User\ports.json");
-            //if (ports != null)
-            //{
-            //    foreach (var port in ports)
-            //    {
-            //        Console.WriteLine(port);
-            //    }
-            //}
             return EnterData();
         }
         private void ReadShowData(FileMaster fileMaster, string path, string firstMessage)

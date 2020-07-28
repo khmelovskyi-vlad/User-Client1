@@ -29,10 +29,6 @@ namespace User_Client
                     SendMessage(line);
                     AnswerAndWriteServer();
                     ModeSelection(line);
-                    //if (EndUsing)
-                    //{
-                    //    return;
-                    //}
                 }
             }
         }
@@ -91,10 +87,6 @@ namespace User_Client
                     {
                         writerGroups.Run(1);
                     }
-                    //if (communication.data.ToString() == "You connect to chat")
-                    //{
-                    //    return;
-                    //}
                     AnswerAndWriteServer();
                 }
             }
@@ -190,8 +182,6 @@ namespace User_Client
                     return;
                 }
             }
-            //Console.WriteLine("ok, good");
-            //Console.ReadKey();
         }
         private bool CreateNewGroup()
         {

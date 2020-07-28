@@ -12,8 +12,6 @@ namespace User_Client
     {
         private string ip;
         private int port;
-        private string nickname;
-        private string password;
         private Socket tcpSocket;
         public Connector(FileMaster fileMaster)
         {
@@ -34,8 +32,6 @@ namespace User_Client
                         Communication communication = new Communication(tcpSocket);
                         ChatMaster chatMaster = new ChatMaster(communication);
                         chatMaster.Run();
-                        //Entrance entrance = new Entrance(communication);
-                        //entrance.Run();
                     }
                     catch (Exception ex)
                     {
@@ -48,34 +44,6 @@ namespace User_Client
                 Console.WriteLine(ex);
             }
         }
-        //private void Test(Communication communication, Socket socket)
-        //{
-        //    AnswerServer(socket, communication);
-        //    Console.ReadKey();
-        //}
-        ////private void Test(Communication communication, Socket socket)
-        ////{
-        ////    //communication.AnswerAndWriteServer();
-        ////    //Console.ReadKey();
-        ////    AnswerServer(tcpSocket, communication);
-        ////}
-        //private byte[] buffer;
-        //public StringBuilder data;
-        //public void AnswerServer(Socket tcpSocket, Communication communication)
-        //{
-        //    var path = @"D:\temp\ok4";
-        //    using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.Write))
-        //    {
-        //        buffer = new byte[256];
-        //        data = new StringBuilder();
-        //        do
-        //        {
-        //            var size = tcpSocket.Receive(buffer);
-        //            stream.Write(buffer, 0, size);
-        //            //data.Append(Encoding.ASCII.GetString(buffer, 0, size));
-        //        } while (tcpSocket.Available > 0);
-        //    }
-        //}
         private void InitializationClient(string[] userInformation)
         {
             try

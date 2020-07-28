@@ -294,7 +294,7 @@ namespace User_Client
                     break;
                 default:
                     SendMessage("default");
-                    ModeSelection();
+                    successConnect = ModeSelection();
                     break;
             }
             return successConnect;
