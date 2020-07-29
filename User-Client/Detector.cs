@@ -11,7 +11,7 @@ namespace User_Client
         public Detector()
         {
         }
-        public void Run()
+        public async Task Run()
         {
             FileMaster fileMaster = new FileMaster();
             var connector = new Connector(fileMaster);
@@ -19,8 +19,7 @@ namespace User_Client
             {
                 while (true)
                 {
-                    var userInformation = FindNeedData(fileMaster);
-                    connector.Run(userInformation);
+                    await connector.Run();
                     Console.WriteLine("If you want connect again, click Enter");
                     var key = Console.ReadKey(true);
                     if (key.Key != ConsoleKey.Enter)
@@ -35,37 +34,6 @@ namespace User_Client
                 Console.ReadKey();
             }
 
-        }
-        private string[] FindNeedData(FileMaster fileMaster)
-        {
-            ReadShowData(fileMaster, @"D:\temp\User\IPs.json", "IPs:");
-            ReadShowData(fileMaster, @"D:\temp\User\ports.json", "Ports:");
-            return EnterData();
-        }
-        private void ReadShowData(FileMaster fileMaster, string path, string firstMessage)
-        {
-            Console.WriteLine(firstMessage);
-            var data = (List<object>)fileMaster.ReadData(path);
-            if (data != null)
-            {
-                foreach (var oneData in data)
-                {
-                    Console.WriteLine(oneData);
-                }
-            }
-        }
-        private string[] EnterData()
-        {
-            var ip = "192.168.1.11";
-            var port = "1234";
-            //var ip = EnterSomeData("Enter your IP");
-            //var port = EnterSomeData("Enter need port");
-            return new string[] { ip, port};
-        }
-        private string EnterSomeData(string message)
-        {
-            Console.WriteLine(message);
-            return Console.ReadLine();
         }
     }
 }

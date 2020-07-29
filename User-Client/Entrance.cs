@@ -22,7 +22,7 @@ namespace User_Client
         Communication communication;
         private string FilePath { get; }
         private WriterGroups writerGroups;
-        private bool LoginRegisteredAccount()
+        private async Task<bool> LoginRegisteredAccount()
         {
             SendMessage("using");
             Console.WriteLine("Sign in with your previously entered nickname?" +
@@ -30,14 +30,14 @@ namespace User_Client
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                return SignInWithSavedAccount();
+                return await SignInWithSavedAccount();
             }
             else
             {
-                return SignInWithoutSavedAccount();
+                return await SignInWithoutSavedAccount();
             }
         }
-        private bool SignInWithoutSavedAccount()
+        private async Task<bool> SignInWithoutSavedAccount()
         {
             var userData = EnterNicknameAndPassword();
             if (userData.Length == 0)
@@ -46,47 +46,47 @@ namespace User_Client
             }
             else
             {
-                AddAccountData(userData);
+                await AddAccountData(userData);
                 return true;
             }
         }
-        private bool SignInWithSavedAccount()
+        private async Task<bool> SignInWithSavedAccount()
         {
-            var finded = FindAccountAndEnter();
+            var finded = await FindAccountAndEnter();
             if (finded)
             {
                 return true;
             }
             else
             {
-                return SignInWithoutSavedAccount();
+                return await SignInWithoutSavedAccount();
             }
         }
-        private void DeleteAccountData(string[] userData)
+        private async Task DeleteAccountData(string[] userData)
         {
             Console.WriteLine("If you want to delete your nickname and password from the device, click Enter");
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                userNicknamesAndPasswords = fileMaster.ReadDataToUser(FilePath);
+                userNicknamesAndPasswords = await fileMaster.ReadData<UserNicknameAndPassword>(FilePath);
                 if (userNicknamesAndPasswords.Count() != 0)
                 {
                     Console.WriteLine(userNicknamesAndPasswords.Count());
                     userNicknamesAndPasswords = userNicknamesAndPasswords
                         .Where(acc => acc.Nickname != userData[0] || acc.Password != userData[1])
                         .ToList();
-                    fileMaster.WriteData(FilePath, userNicknamesAndPasswords);
+                    await fileMaster.WriteData(FilePath, userNicknamesAndPasswords);
                     Console.WriteLine("Your nickname and password were deleted");
                 }
             }
         }
-        private void AddAccountData(string[] userData)
+        private async Task AddAccountData(string[] userData)
         {
             Console.WriteLine("If you want to save your nickname and password to the device, click Enter");
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                userNicknamesAndPasswords = fileMaster.ReadDataToUser(FilePath);
+                userNicknamesAndPasswords = await fileMaster.ReadData<UserNicknameAndPassword>(FilePath);
                 UserNicknameAndPassword userNicknameAndPassword = new UserNicknameAndPassword(userData[0], userData[1]);
                 if (userNicknamesAndPasswords.Count() != 0)
                 {
@@ -106,29 +106,29 @@ namespace User_Client
                             var chackRewrite = Console.ReadKey(true);
                             if (chackRewrite.Key == ConsoleKey.Enter)
                             {
-                                RewriteDate();
+                                await RewriteDate();
                             }
                             return;
                         }
                     }
                 }
-                void RewriteDate()
+                async Task RewriteDate()
                 {
                     userNicknamesAndPasswords = userNicknamesAndPasswords
                         .Where(user => user.Nickname != userNicknameAndPassword.Nickname)
                         .ToList();
                     userNicknamesAndPasswords.Add(userNicknameAndPassword);
-                    fileMaster.WriteData(FilePath, userNicknamesAndPasswords);
+                    await fileMaster.WriteData(FilePath, userNicknamesAndPasswords);
                     Console.WriteLine("Password changed");
                 }
-                fileMaster.AddData(userNicknameAndPassword, FilePath);
+                await fileMaster.AddData(userNicknameAndPassword, FilePath);
                 Console.WriteLine("Saving is successful");
             }
         }
         List<UserNicknameAndPassword> userNicknamesAndPasswords;
-        private bool FindAccountAndEnter()
+        private async Task<bool> FindAccountAndEnter()
         {
-            userNicknamesAndPasswords = fileMaster.ReadDataToUser(FilePath);
+            userNicknamesAndPasswords = await fileMaster.ReadData<UserNicknameAndPassword>(FilePath);
             if (userNicknamesAndPasswords != null)
             {
                 foreach (var userNicknameAndPassword in userNicknamesAndPasswords)
@@ -263,16 +263,16 @@ namespace User_Client
                 }
             }
         }
-        private bool LoginNewAccount()
+        private async Task<bool> LoginNewAccount()
         {
             SendMessage("new");
-            return SignInWithoutSavedAccount();
+            return await SignInWithoutSavedAccount();
         }
         private void ExitFromServer()
         {
 
         }
-        public bool ModeSelection()
+        public async Task<bool> ModeSelection()
         {
             AnswerAndWriteServer();
             var successConnect = false;
@@ -281,25 +281,25 @@ namespace User_Client
             switch (key.Key)
             {
                 case ConsoleKey.Enter:
-                    successConnect = LoginRegisteredAccount();
+                    successConnect = await LoginRegisteredAccount();
                     break;
                 case ConsoleKey.Tab:
-                    successConnect = LoginNewAccount();
+                    successConnect = await LoginNewAccount();
                     break;
                 case ConsoleKey.Escape:
-                    successConnect = EscapeServer();
+                    successConnect = await EscapeServer();
                     break;
                 case ConsoleKey.Delete:
-                    successConnect = DeleteAccount();
+                    successConnect = await DeleteAccount();
                     break;
                 default:
                     SendMessage("default");
-                    successConnect = ModeSelection();
+                    successConnect = await ModeSelection();
                     break;
             }
             return successConnect;
         }
-        private bool EscapeServer()
+        private async Task<bool> EscapeServer()
         {
             SendMessage("escape");
             AnswerAndWriteServer();
@@ -313,9 +313,9 @@ namespace User_Client
             SendMessage("No");
             AnswerAndWriteServer();
             SendMessage("Ok");
-            return ModeSelection();
+            return await ModeSelection();
         }
-        private bool DeleteAccount()
+        private async Task<bool> DeleteAccount()
         {
             SendMessage("delete");
             var userData = EnterNicknameAndPassword();
@@ -335,7 +335,7 @@ namespace User_Client
                 return false;
             }
             AnswerAndWriteServer();
-            DeleteAccountData(userData);
+            await DeleteAccountData(userData);
             return false;
         }
         private void AnswerAndWriteServer()

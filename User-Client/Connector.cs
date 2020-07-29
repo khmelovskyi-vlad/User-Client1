@@ -18,11 +18,12 @@ namespace User_Client
             this.fileMaster = fileMaster;
         }
         private FileMaster fileMaster;
-        public void Run(string[] userInformation)
+        public async Task Run()
         {
             try
             {
-                InitializationClient(userInformation);
+                var userInformation = await FindNeedData(fileMaster);
+                await InitializationClient(userInformation);
                 var tcpEndPoint = new IPEndPoint(IPAddress.Parse(ip), this.port);
                 using (tcpSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
                 {
@@ -31,7 +32,7 @@ namespace User_Client
                         tcpSocket.Connect(tcpEndPoint);
                         Communication communication = new Communication(tcpSocket);
                         ChatMaster chatMaster = new ChatMaster(communication);
-                        chatMaster.Run();
+                        await chatMaster.Run();
                     }
                     catch (Exception ex)
                     {
@@ -41,30 +42,63 @@ namespace User_Client
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                //Console.WriteLine(ex);
             }
         }
-        private void InitializationClient(string[] userInformation)
+        private async Task InitializationClient(string[] userInformation)
         {
             try
             {
                 ip = userInformation[0];
                 port = Convert.ToInt32(userInformation[1]);
-                SaveData();
+                await SaveData();
             }
-            catch (Exception ex)
+            catch (FormatException ex)
             {
+                Console.WriteLine("The port isn't the number");
                 throw ex;
             }
         }
-        private void SaveData()
+        private async Task SaveData()
         {
             Console.WriteLine("If you want to save this date, click Enter");
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                fileMaster.AddPortAndIP(ip, port);
+                await fileMaster.AddPortAndIP(ip, port);
             }
+        }
+
+        private async Task<string[]> FindNeedData(FileMaster fileMaster)
+        {
+            await ReadShowData<string>(fileMaster, @"D:\temp\User\IPs.json", "IPs:");
+            await ReadShowData<int>(fileMaster, @"D:\temp\User\ports.json", "Ports:");
+            return EnterData();
+        }
+        private async Task ReadShowData<T>(FileMaster fileMaster, string path, string firstMessage)
+        {
+            Console.WriteLine(firstMessage);
+            var data = await fileMaster.ReadData<T>(path);
+            if (data != null)
+            {
+                foreach (var oneData in data)
+                {
+                    Console.WriteLine(oneData);
+                }
+            }
+        }
+        private string[] EnterData()
+        {
+            var ip = "192.168.1.10";
+            var port = "1234";
+            //var ip = EnterSomeData("Enter your IP");
+            //var port = EnterSomeData("Enter need port");
+            return new string[] { ip, port };
+        }
+        private string EnterSomeData(string message)
+        {
+            Console.WriteLine(message);
+            return Console.ReadLine();
         }
     }
 }

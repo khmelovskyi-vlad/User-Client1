@@ -12,36 +12,28 @@ namespace User_Client
     {
         private const string PathIps = @"D:\temp\User\IPs.json";
         private const string PathPorts = @"D:\temp\User\ports.json";
-        public void AddPortAndIP(object IP, object port)
+        public async Task AddPortAndIP<T, T2>(T IP, T2 port)
         {
-            AddData(IP, PathIps);
-            AddData(port, PathPorts);
+            await AddData(IP, PathIps);
+            await AddData(port, PathPorts);
         }
-        public object ReadData(string path)
+        public async Task<List<T>> ReadData<T>(string path)
         {
             using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
-                var dataJson = ReadData(stream);
-                return JsonConvert.DeserializeObject<List<object>>(dataJson);
+                var dataJson = await ReadData(stream);
+                return JsonConvert.DeserializeObject<List<T>>(dataJson);
             }
         }
-        public List<UserNicknameAndPassword> ReadDataToUser(string path)
+        public async Task AddData<T>(T data, string path)
         {
             using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
-                var dataJson = ReadData(stream);
-                return JsonConvert.DeserializeObject<List<UserNicknameAndPassword>>(dataJson);
-            }
-        }
-        public void AddData(object data, string path)
-        {
-            using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
-            {
-                var dataJson = ReadData(stream);
-                var datas = JsonConvert.DeserializeObject<List<object>>(dataJson);
+                var dataJson = await ReadData(stream);
+                var datas = JsonConvert.DeserializeObject<List<T>>(dataJson);
                 if (datas == null)
                 {
-                    datas = new List<object>();
+                    datas = new List<T>();
                 }
                 foreach (var oneData in datas)
                 {
@@ -51,17 +43,17 @@ namespace User_Client
                     }
                 }
                 datas.Add(data);
-                WriteData(path, datas, stream);
+                await WriteData(path, datas, stream);
             }
         }
-        private string ReadData(FileStream stream)
+        private async Task<string> ReadData(FileStream stream)
         {
             var sb = new StringBuilder();
             var count = 256;
             var buffer = new byte[count];
             while (true)
             {
-                var realCount = stream.Read(buffer, 0, count);
+                var realCount = await stream.ReadAsync(buffer, 0, count);
                 sb.Append(Encoding.Default.GetString(buffer, 0, realCount));
                 if (realCount < count)
                 {
@@ -70,18 +62,18 @@ namespace User_Client
             }
             return sb.ToString();
         }
-        private void WriteData(string path, object data, FileStream stream)
+        private async Task WriteData<T>(string path, List<T> data, FileStream stream)
         {
             stream.SetLength(0);
             var dataJson = JsonConvert.SerializeObject(data);
             var buffer = Encoding.Default.GetBytes(dataJson);
-            stream.Write(buffer, 0, buffer.Length);
+            await stream.WriteAsync(buffer, 0, buffer.Length);
         }
-        public void WriteData(string path, object data)
+        public async Task WriteData<T>(string path, List<T> data)
         {
             using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
-                WriteData(path, data, stream);
+                await WriteData(path, data, stream);
             }
         }
     }

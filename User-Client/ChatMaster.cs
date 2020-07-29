@@ -15,10 +15,10 @@ namespace User_Client
         }
         Communication communication;
         private WriterGroups writerGroups;
-        public bool Run()
+        public async Task<bool> Run()
         {
             Entrance entrance = new Entrance(communication, @"D:\temp\User\user.json", writerGroups);
-            var successConection = entrance.ModeSelection();
+            var successConection = await entrance.ModeSelection();
             if (!successConection)
             {
                 return false;

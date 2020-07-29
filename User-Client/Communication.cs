@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-//using System.Threading;
-//using System.Threading.Tasks;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace User_Client
 {
@@ -19,6 +19,8 @@ namespace User_Client
         private byte[] buffer;
         public StringBuilder data;
         private const int size = 256;
+        AutoResetEvent resetSend = new AutoResetEvent(false);
+        AutoResetEvent resetReceive = new AutoResetEvent(false);
         public void AnswerAndWriteToSecndWindow(SecondWindowServer secondWindowServer)
         {
             AnswerServer();
@@ -35,9 +37,27 @@ namespace User_Client
             data = new StringBuilder();
             do
             {
-                var size = tcpSocket.Receive(buffer);
-                data.Append(Encoding.ASCII.GetString(buffer, 0, size));
+                tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, ReceiveCallback, tcpSocket);
+                resetReceive.WaitOne();
             } while (tcpSocket.Available > 0);
+        }
+        private void ReceiveCallback(IAsyncResult AR)
+        {
+            Socket current = (Socket)AR.AsyncState;
+            int received;
+
+            try
+            {
+                received = current.EndReceive(AR);
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Server forcefully disconnected");
+                resetReceive.Set();
+                return;
+            }
+            data.Append(Encoding.ASCII.GetString(buffer, 0, received));
+            resetReceive.Set();
         }
         public void SendMessage(string message)
         {
@@ -45,7 +65,22 @@ namespace User_Client
             {
                 throw new OperationCanceledException();
             }
-            tcpSocket.Send(Encoding.ASCII.GetBytes(message));
+            byte[] byteData = Encoding.ASCII.GetBytes(message);
+            tcpSocket.BeginSend(byteData, 0, byteData.Length, 0, SendCallback, tcpSocket);
+            resetSend.WaitOne();
+        }
+        private void SendCallback(IAsyncResult AR)
+        {
+            Socket current = (Socket)AR.AsyncState;
+            try
+            {
+                current.EndSend(AR);
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Can`t send message");
+            }
+            resetSend.Set();
         }
         public void SendFile(string path, string fileName)
         {
@@ -53,10 +88,9 @@ namespace User_Client
             AnswerServer();
             var length = new FileInfo(path).Length;
             var lengthByte = BitConverter.GetBytes(length);
-            //tcpSocket.SendFile(path);
-            tcpSocket.SendFile(path, lengthByte, null, TransmitFileOptions.UseKernelApc);
-            //tcpSocket.BeginSendFile(path, lengthByte, null, TransmitFileOptions.UseKernelApc, SendFileCallback, tcpSocket);
-            //resetSend.WaitOne();
+            //tcpSocket.ReceiveAsync(path, lengthByte, null, TransmitFileOptions.UseKernelApc);
+            tcpSocket.BeginSendFile(path, lengthByte, null, TransmitFileOptions.UseKernelApc, SendFileCallback, tcpSocket);
+            resetSend.WaitOne();
         }
         public void ReciveFile(string path)
         {
@@ -66,35 +100,25 @@ namespace User_Client
             using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.Write))
             {
                 buffer = new byte[size];
-                var endSend = 0;
                 do
                 {
                     bufferSize = tcpSocket.Receive(buffer);
-                    endSend = endSend + bufferSize;
                     stream.Write(buffer, 0, bufferSize);
-                } while (endSend != fileLength);
+                } while (stream.Length != fileLength);
             }
         }
-        //public void SendFile(string fileName)
-        //{
-        //    var length = new FileInfo(fileName).Length;
-        //    var lengthByte = BitConverter.GetBytes(length);
-        //    tcpSocket.BeginSendFile(fileName, lengthByte, null, TransmitFileOptions.UseKernelApc, SendFileCallback, tcpSocket);
-        //    resetSend.WaitOne();
-        //}
-        //AutoResetEvent resetSend = new AutoResetEvent(false);
-        //private void SendFileCallback(IAsyncResult AR)
-        //{
-        //    Socket current = (Socket)AR.AsyncState;
-        //    try
-        //    {
-        //        current.EndSendFile(AR);
-        //    }
-        //    catch (SocketException)
-        //    {
-        //        Console.WriteLine("Can`t send file");
-        //    }
-        //    resetSend.Set();
-        //}
+        private void SendFileCallback(IAsyncResult AR)
+        {
+            Socket current = (Socket)AR.AsyncState;
+            try
+            {
+                current.EndSendFile(AR);
+            }
+            catch (SocketException)
+            {
+                Console.WriteLine("Can`t send file");
+            }
+            resetSend.Set();
+        }
     }
 }

@@ -12,7 +12,7 @@ namespace User_Client
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
             if (args.Length != 0)
             {
@@ -25,8 +25,9 @@ namespace User_Client
             else
             {
                 Detector detector = new Detector();
-                detector.Run();
+                await detector.Run();
             }
+            return 1;
         }
     }
 }
