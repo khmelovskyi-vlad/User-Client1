@@ -19,7 +19,7 @@ namespace User_Client
         private byte[] buffer;
         public StringBuilder data;
         private const int size = 256;
-        AutoResetEvent resetSend = new AutoResetEvent(false);
+        AutoResetEvent resetSend = new AutoResetEvent(true);
         AutoResetEvent resetReceive = new AutoResetEvent(false);
         public void AnswerAndWriteToSecndWindow(SecondWindowServer secondWindowServer)
         {
@@ -65,9 +65,9 @@ namespace User_Client
             {
                 throw new OperationCanceledException();
             }
+            resetSend.WaitOne();
             byte[] byteData = Encoding.ASCII.GetBytes(message);
             tcpSocket.BeginSend(byteData, 0, byteData.Length, 0, SendCallback, tcpSocket);
-            resetSend.WaitOne();
         }
         private void SendCallback(IAsyncResult AR)
         {

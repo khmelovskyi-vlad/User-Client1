@@ -29,7 +29,19 @@ namespace User_Client
                 {
                     try
                     {
-                        tcpSocket.Connect(tcpEndPoint);
+                        //tcpSocket.Connect(tcpEndPoint);
+                        tcpSocket.BeginConnect(tcpEndPoint, ar =>
+                        {
+                            var tcpSocke = (Socket)ar.AsyncState;
+                            try
+                            {
+                                tcpSocke.EndConnect(ar);
+                            }
+                            catch (Exception ex)
+                            {
+                                throw ex;
+                            }
+                        }, tcpSocket);
                         Communication communication = new Communication(tcpSocket);
                         ChatMaster chatMaster = new ChatMaster(communication);
                         await chatMaster.Run();

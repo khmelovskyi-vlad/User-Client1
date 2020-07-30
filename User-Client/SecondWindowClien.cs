@@ -12,7 +12,7 @@ namespace User_Client
     {
         public void Run()
         {
-            using (NamedPipeClientStream pipeClient = new NamedPipeClientStream(".", "testpipe", PipeDirection.In))
+            using (NamedPipeClientStream pipeClient = new NamedPipeClientStream(".", "help", PipeDirection.In))
             {
                 pipeClient.Connect();
                 
@@ -24,6 +24,7 @@ namespace User_Client
                         Console.WriteLine(temp);
                     }
                 }
+                Console.ReadKey();
             }
         }
     }

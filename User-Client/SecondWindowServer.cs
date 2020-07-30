@@ -22,7 +22,7 @@ namespace User_Client
             pipeClient.StartInfo.Arguments = "1";
             pipeClient.Start();
 
-            using (NamedPipeServerStream pipeServer = new NamedPipeServerStream("testpipe", PipeDirection.Out))
+            using (NamedPipeServerStream pipeServer = new NamedPipeServerStream("help", PipeDirection.Out))
             {
                 pipeServer.WaitForConnection();
                 try

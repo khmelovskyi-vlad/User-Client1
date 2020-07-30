@@ -23,6 +23,7 @@ namespace User_Client
         public void Run()
         {
             //Interlocked
+            communication.SendMessage("okey");
             Task.Run(() => secondWindowServer.Run());
             secondWindowServer.autoResetCreated.WaitOne();
             communication.AnswerServer();
