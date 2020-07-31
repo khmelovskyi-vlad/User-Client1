@@ -69,6 +69,7 @@ namespace User_Client
                         if (needOpenChat)
                         {
                             OpenChat();
+                            return;
                         }
                         else
                         {

@@ -31,34 +31,72 @@ namespace User_Client
             AnswerServer();
             Console.WriteLine(data);
         }
+        //public void AnswerServer()
+        //{
+        //    buffer = new byte[size];
+        //    data = new StringBuilder();
+        //    do
+        //    {
+        //        tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, ReceiveCallback, tcpSocket);
+        //        resetReceive.WaitOne();
+        //    } while (tcpSocket.Available > 0);
+        //}
         public void AnswerServer()
         {
             buffer = new byte[size];
             data = new StringBuilder();
-            do
-            {
-                tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, ReceiveCallback, tcpSocket);
-                resetReceive.WaitOne();
-            } while (tcpSocket.Available > 0);
+            tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, ReceiveCallback, tcpSocket);
+            resetReceive.WaitOne();
         }
         private void ReceiveCallback(IAsyncResult AR)
         {
             Socket current = (Socket)AR.AsyncState;
             int received;
-
             try
             {
                 received = current.EndReceive(AR);
             }
-            catch (SocketException)
+            catch (Exception)
             {
                 Console.WriteLine("Server forcefully disconnected");
                 resetReceive.Set();
+                data = new StringBuilder();
+                data.Append("?/you left the chat");
                 return;
             }
-            data.Append(Encoding.ASCII.GetString(buffer, 0, received));
-            resetReceive.Set();
+            if (received > 0)
+            {
+                data.Append(Encoding.ASCII.GetString(buffer, 0, received));
+            }
+            if (current.Available > 0)
+            {
+                current.BeginReceive(buffer, 0, size, SocketFlags.None, ReceiveCallback, current);
+            }
+            else
+            {
+                resetReceive.Set();
+            }
         }
+        //private void ReceiveCallback(IAsyncResult AR)
+        //{
+        //    Socket current = (Socket)AR.AsyncState;
+        //    int received;
+
+        //    try
+        //    {
+        //        received = current.EndReceive(AR);
+        //    }
+        //    catch (Exception)
+        //    {
+        //        Console.WriteLine("Server forcefully disconnected");
+        //        resetReceive.Set();
+        //        data = new StringBuilder();
+        //        data.Append("?/you left the chat");
+        //        return;
+        //    }
+        //    data.Append(Encoding.ASCII.GetString(buffer, 0, received));
+        //    resetReceive.Set();
+        //}
         public void SendMessage(string message)
         {
             if (message == "??")

@@ -124,6 +124,7 @@ namespace User_Client
                             communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                             if (communication.data.ToString() == $"New group have {typeNewGroup} type and name {nameNewGroup}")
                             {
+                                ChangeTypeGroup(typeNewGroup);
                                 return;
                             }
                             Console.WriteLine("Bed input");
@@ -143,6 +144,17 @@ namespace User_Client
                     communication.SendMessage("End");
                     return;
                 }
+            }
+        }
+        private void ChangeTypeGroup(string typeGroup)
+        {
+            if (typeGroup == "public")
+            {
+                TypeChat = "ug";
+            }
+            else if (typeGroup == "secret")
+            {
+                TypeChat = "sg";
             }
         }
         private void SendFile()
@@ -260,11 +272,7 @@ namespace User_Client
                 var message = communication.data.ToString();
                 secondWindowServer.Write(message);
                 autoResetMessage.WaitOne();
-                if (message == "?/delete")
-                {
-                    communication.SendMessage("?/end");
-                }
-                else if (message == "?/you left the chat")
+                if (message == "?/you left the chat") //кожен раз створюється строка "?/you left the chat"
                 {
                     autoResetConnectAgain.Set();
                     return;

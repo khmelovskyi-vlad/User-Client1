@@ -24,7 +24,7 @@ namespace User_Client
                         Console.WriteLine(temp);
                     }
                 }
-                Console.ReadKey();
+                //Console.ReadKey();
             }
         }
     }
