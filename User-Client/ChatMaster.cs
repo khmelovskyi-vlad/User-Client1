@@ -23,9 +23,9 @@ namespace User_Client
             {
                 return false;
             }
-            writerGroups.Run(6);
+            await writerGroups.Run(6);
             ConnectorToChat connectorToChat = new ConnectorToChat(communication, writerGroups);
-            connectorToChat.SelectChat();
+            await connectorToChat.SelectChat();
             Console.ReadKey(true);
             return successConection;
         }

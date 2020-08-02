@@ -24,7 +24,7 @@ namespace User_Client
         private WriterGroups writerGroups;
         private async Task<bool> LoginRegisteredAccount()
         {
-            SendMessage("using");
+            await communication.SendMessage("using");
             Console.WriteLine("Sign in with your previously entered nickname?" +
                 " If yes, click Enter");
             var key = Console.ReadKey(true);
@@ -39,7 +39,7 @@ namespace User_Client
         }
         private async Task<bool> SignInWithoutSavedAccount()
         {
-            var userData = EnterNicknameAndPassword();
+            var userData = await EnterNicknameAndPassword();
             if (userData.Length == 0)
             {
                 return false; 
@@ -144,7 +144,7 @@ namespace User_Client
                     {
                         if (line == userNicknameAndPassword.Nickname)
                         {
-                            return EnterWithSavedAccount(userNicknameAndPassword);
+                            return await EnterWithSavedAccount(userNicknameAndPassword);
                         }
                     }
                     Console.WriteLine($"Don`t have this nickname, number of attempts left: {numberOfAttempts - i}");
@@ -156,17 +156,17 @@ namespace User_Client
             }
             return false;
         }
-        private bool EnterWithSavedAccount(UserNicknameAndPassword userNicknameAndPassword)
+        private async Task<bool> EnterWithSavedAccount(UserNicknameAndPassword userNicknameAndPassword)
         {
-            AnswerServer();
+            await communication.AnswerServer();
             if (communication.data.ToString() == "Enter a nickname")
             {
-                SendMessage(userNicknameAndPassword.Nickname);
-                AnswerServer();
+                await communication.SendMessage(userNicknameAndPassword.Nickname);
+                await communication.AnswerServer();
                 if (communication.data.ToString() == "Enter password bigger than 7 symbols")
                 {
-                    SendMessage(userNicknameAndPassword.Password);
-                    AnswerAndWriteServer();
+                    await communication.SendMessage(userNicknameAndPassword.Password);
+                    await communication.AnswerAndWriteServer();
                     if (communication.data.ToString() == "You enter to messenger")
                     {
                         return true;
@@ -175,14 +175,14 @@ namespace User_Client
             }
             return false;
         }
-        private string[] EnterNicknameAndPassword()
+        private async Task<string[]> EnterNicknameAndPassword()
         {
             while (true)
             {
-                var nick = EnterNickname();
+                var nick = await EnterNickname();
                 if (nick.Length > 0)
                 {
-                    var password = EnterPassword();
+                    var password = await EnterPassword();
                     if (password.Length > 7)
                     {
                         return new string[] { nick, password };
@@ -191,22 +191,22 @@ namespace User_Client
                 var key = Console.ReadKey();
                 if (key.Key != ConsoleKey.Enter)
                 {
-                    SendMessage("No");
+                    await communication.SendMessage("No");
                     return new string[0];
                 }
-                SendMessage("Enter");
+                await communication.SendMessage("Enter");
             }
         }
-        private string EnterNickname()
+        private async Task<string> EnterNickname()
         {
-            AnswerAndWriteServer();
+            await communication.AnswerAndWriteServer();
             while (true)
             {
                 var nickname = Console.ReadLine();
                 if (nickname.Length > 0)
                 {
-                    SendMessage(nickname);
-                    AnswerAndWriteServer();
+                    await communication.SendMessage(nickname);
+                    await communication.AnswerAndWriteServer();
                     var s = communication.data.ToString().Substring(communication.data.ToString().Length - 5);
                     if (communication.data.ToString() == "Enter password bigger than 7 symbols")
                     {
@@ -223,7 +223,7 @@ namespace User_Client
                 }
             }
         }
-        private string EnterPassword()
+        private async Task<string> EnterPassword()
         {
             var i = 0;
             StringBuilder password = new StringBuilder();
@@ -233,8 +233,8 @@ namespace User_Client
                 if (key.Key == ConsoleKey.Enter)
                 {
                     i++;
-                    SendMessage(password.ToString());
-                    AnswerServer();
+                    await communication.SendMessage(password.ToString());
+                    await communication.AnswerServer();
                     if (communication.data.ToString() == "You enter to messenger")
                     {
                         Console.WriteLine();
@@ -265,7 +265,7 @@ namespace User_Client
         }
         private async Task<bool> LoginNewAccount()
         {
-            SendMessage("new");
+            await communication.SendMessage("new");
             return await SignInWithoutSavedAccount();
         }
         private void ExitFromServer()
@@ -274,7 +274,7 @@ namespace User_Client
         }
         public async Task<bool> ModeSelection()
         {
-            AnswerAndWriteServer();
+            await communication.AnswerAndWriteServer();
             var successConnect = false;
             var key = Console.ReadKey(true);
 
@@ -293,7 +293,7 @@ namespace User_Client
                     successConnect = await DeleteAccount();
                     break;
                 default:
-                    SendMessage("default");
+                    await communication.SendMessage("default");
                     successConnect = await ModeSelection();
                     break;
             }
@@ -301,55 +301,42 @@ namespace User_Client
         }
         private async Task<bool> EscapeServer()
         {
-            SendMessage("escape");
-            AnswerAndWriteServer();
+            await communication.SendMessage("escape");
+            await communication.AnswerAndWriteServer();
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                SendMessage("Yes");
-                AnswerAndWriteServer();
+                await communication.SendMessage("Yes");
+                await communication.AnswerAndWriteServer();
                 return false;
             }
-            SendMessage("No");
-            AnswerAndWriteServer();
-            SendMessage("Ok");
+            await communication.SendMessage("No");
+            await communication.AnswerAndWriteServer();
+            await communication.SendMessage("Ok");
             return await ModeSelection();
         }
         private async Task<bool> DeleteAccount()
         {
-            SendMessage("delete");
-            var userData = EnterNicknameAndPassword();
+            await communication.SendMessage("delete");
+            var userData = await EnterNicknameAndPassword();
             if (userData.Length == 0)
             {
                 return false;
             }
-            AnswerAndWriteServer();
+            await communication.AnswerAndWriteServer();
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                SendMessage("Yes");
+                await communication.SendMessage("Yes");
             }
             else
             {
-                SendMessage("No");
+                await communication.SendMessage("No");
                 return false;
             }
-            AnswerAndWriteServer();
+            await communication.AnswerAndWriteServer();
             await DeleteAccountData(userData);
             return false;
-        }
-        private void AnswerAndWriteServer()
-        {
-            AnswerServer();
-            Console.WriteLine(communication.data);
-        }
-        private void AnswerServer()
-        {
-            communication.AnswerServer();
-        }
-        private void SendMessage(string message)
-        {
-            communication.SendMessage(message);
         }
     }
 }

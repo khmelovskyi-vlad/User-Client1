@@ -20,19 +20,19 @@ namespace User_Client
         private Communication communication;
         private SecondWindowServer secondWindowServer;
         private string TypeChat;
-        public void Run()
+        public async Task Run()
         {
             //Interlocked
-            communication.SendMessage("okey");
+            await communication.SendMessage("okey");
             Task.Run(() => secondWindowServer.Run());
             secondWindowServer.autoResetCreated.WaitOne();
-            communication.AnswerServer();
+            await communication.AnswerServer();
             TypeChat = communication.data.ToString();
-            communication.SendMessage("ok");
-            communication.AnswerAndWriteServer();
-            communication.SendMessage("ok");
-            WriteMessages();
-            Task.Run(() => AnswerUsers());
+            await communication.SendMessage("ok");
+            await communication.AnswerAndWriteServer();
+            await communication.SendMessage("ok");
+            await WriteMessages();
+            AnswerUsers();
             while (true)
             {
                 var line = Console.ReadLine();
@@ -42,19 +42,19 @@ namespace User_Client
                         || line == "?/leave a group" || line == "?/end")
                     {
                         autoResetMessage.WaitOne();
-                        communication.SendMessage(line);
+                        await communication.SendMessage(line);
                         switch (line)
                         {
                             case "?/send":
-                                SendFile();
+                                await SendFile();
                                 break;
                             case "?/download":
-                                ReceiveFile();
+                                await ReceiveFile();
                                 break;
                             case "?/change":
                                 if (TypeChat == "pp" || TypeChat == "ch")
                                 {
-                                    ChangeTypeGroup();
+                                    await ChangeTypeGroup();
                                     break;
                                 }
                                 autoResetMessage.Set();
@@ -62,16 +62,16 @@ namespace User_Client
                             case "?/invite":
                                 if (TypeChat == "pg" || TypeChat == "ug" || TypeChat == "sg")
                                 {
-                                    InviteOrDeleteUser();
+                                    await InviteOrDeleteUser();
                                     break;
                                 }
                                 autoResetMessage.Set();
                                 continue;
                             case "?/delete":
-                                InviteOrDeleteUser();
+                                await InviteOrDeleteUser();
                                 break;
                             case "?/leave a group":
-                                var successLeave = LeaveGroup();
+                                var successLeave = await LeaveGroup();
                                 if (successLeave)
                                 {
                                     autoResetMessage.Set();
@@ -82,46 +82,46 @@ namespace User_Client
                                 autoResetMessage.Set();
                                 return;
                         }
-                        communication.SendMessage("okey");
-                        WriteMessages();
+                        await communication.SendMessage("okey");
+                        await WriteMessages();
                         autoResetMessage.Set();
                     }
                     else
                     {
-                        communication.SendMessage(line);
+                        await communication.SendMessage(line);
                     }
                 }
             }
         }
-        private void InviteOrDeleteUser()
+        private async Task InviteOrDeleteUser()
         {
             while (true)
             {
                 var userNick = Console.ReadLine();
                 if (userNick.Length > 0)
                 {
-                    communication.SendMessage(userNick);
-                    communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                    await communication.SendMessage(userNick);
+                    await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                     return;
                 }
             }
         }
-        private void ChangeTypeGroup()
+        private async Task ChangeTypeGroup()
         {
             while (true)
             {
                 var typeNewGroup = Console.ReadLine();
                 if (typeNewGroup == "public" || typeNewGroup == "secret")
                 {
-                    communication.SendMessage(typeNewGroup);
-                    communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                    await communication.SendMessage(typeNewGroup);
+                    await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                     while (true)
                     {
                         var nameNewGroup = Console.ReadLine();
                         if (nameNewGroup.Length > 0)
                         {
-                            communication.SendMessage(nameNewGroup);
-                            communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                            await communication.SendMessage(nameNewGroup);
+                            await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                             if (communication.data.ToString() == $"New group have {typeNewGroup} type and name {nameNewGroup}")
                             {
                                 ChangeTypeGroup(typeNewGroup);
@@ -141,7 +141,7 @@ namespace User_Client
                         continue;
                     }
                     Console.WriteLine("Okey, you can write the message");
-                    communication.SendMessage("End");
+                    await communication.SendMessage("End");
                     return;
                 }
             }
@@ -157,38 +157,38 @@ namespace User_Client
                 TypeChat = "sg";
             }
         }
-        private void SendFile()
+        private async Task SendFile()
         {
             ManagerUserInteractor managerUserInteractor = new ManagerUserInteractor();
             var path = managerUserInteractor.FindPath();
             if (path == "?/escape")
             {
-                communication.SendMessage(path);
+                await communication.SendMessage(path);
                 return;
             }
             var fileName = Path.GetFileName(path);
-            communication.SendFile(path, fileName);
-            communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+            await communication.SendFile(path, fileName);
+            await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
         }
-        private void ReceiveFile()
+        private async Task ReceiveFile()
         {
             while (true)
             {
                 var fileName = Console.ReadLine();
                 if (fileName.Length > 0)
                 {
-                    communication.SendMessage(fileName);
-                    communication.AnswerAndWriteToSecndWindow(secondWindowServer);
-                    CheckFindedFile(fileName);
+                    await communication.SendMessage(fileName);
+                    await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                    await CheckFindedFile(fileName);
                     return;
                 }
             }
         }
-        private void CheckFindedFile(string fileName)
+        private async Task CheckFindedFile(string fileName)
         {
             if (communication.data.ToString() == "Finded")
             {
-                FindNameAndRecive();
+                await FindNameAndRecive();
             }
             else if (communication.data.ToString().Substring(0, 9) == "Have some")
             {
@@ -197,21 +197,21 @@ namespace User_Client
                     var dateFile = Console.ReadLine();
                     if (dateFile.Length > 0)
                     {
-                        communication.SendMessage(dateFile);
-                        communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                        await communication.SendMessage(dateFile);
+                        await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
                         if (communication.data.ToString() == "Finded")
                         {
-                            FindNameAndRecive();
+                            await FindNameAndRecive();
                         }
                         return;
                     }
                 }
             }
-            void FindNameAndRecive()
+            async Task FindNameAndRecive()
             {
                 fileName = CheckFile(fileName);
-                communication.SendMessage("ok");
-                communication.ReciveFile($@"D:\temp\User\{fileName}");
+                await communication.SendMessage("ok");
+                await communication.ReciveFile($@"D:\temp\User\{fileName}");
             }
         }
         private string CheckFile(string nameFile)
@@ -243,14 +243,14 @@ namespace User_Client
                 nameFile = $"{i.ToString()}{nameFile}";
             }
         }
-        private bool LeaveGroup()
+        private async Task<bool> LeaveGroup()
         {
             while (true)
             {
                 var line = Console.ReadLine();
                 if (line.Length > 0)
                 {
-                    communication.SendMessage(line);
+                    await communication.SendMessage(line);
                     if (line == "yes")
                     {
                         return true;
@@ -264,11 +264,11 @@ namespace User_Client
         }
         private AutoResetEvent autoResetMessage = new AutoResetEvent(true);
         public AutoResetEvent autoResetConnectAgain = new AutoResetEvent(false);
-        private void AnswerUsers()
+        private async Task AnswerUsers()
         {
             while (true)
             {
-                communication.AnswerServer();
+                await communication.AnswerServer();
                 var message = communication.data.ToString();
                 secondWindowServer.Write(message);
                 autoResetMessage.WaitOne();
@@ -280,16 +280,16 @@ namespace User_Client
                 autoResetMessage.Set();
             }
         }
-        private void WriteMessages()
+        private async Task WriteMessages()
         {
-            communication.AnswerServer();
-            communication.SendMessage("ok");
+            await communication.AnswerServer();
+            await communication.SendMessage("ok");
             var count = Convert.ToInt32(communication.data.ToString());
             for (int i = 0; i < count; i++)
             {
-                communication.AnswerServer();
+                await communication.AnswerServer();
                 secondWindowServer.Write(communication.data.ToString());
-                communication.SendMessage("ok");
+                await communication.SendMessage("ok");
             }
         }
     }

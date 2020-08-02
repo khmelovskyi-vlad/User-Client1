@@ -14,11 +14,11 @@ namespace User_Client
         }
         Communication communication;
         private int MaxWidth { get { return Console.BufferWidth; } }
-        public void Run(int count)
+        public async Task Run(int count)
         {
-            WriteGroups(count);
+            await WriteGroups(count);
         }
-        private void WriteGroups(int count)
+        private async Task WriteGroups(int count)
         {
             var cursorTop = Console.CursorTop;
             var halfOfMaxWidth = MaxWidth / 2;
@@ -28,16 +28,16 @@ namespace User_Client
                 if (i > 1)
                 {
                     Console.SetCursorPosition(halfOfMaxWidth, cursorTop);
-                    AnswerAndWriteServer();
+                    await communication.AnswerAndWriteServer();
                     cursorTop = Console.CursorTop;
-                    SendMessage("Ok");
-                    WriteGroup(halfOfMaxWidth, cursorTop);
+                    await communication.SendMessage("Ok");
+                    await WriteGroup(halfOfMaxWidth, cursorTop);
                     cursorTop = Console.CursorTop;
                     continue;
                 }
-                AnswerAndWriteServer();
-                SendMessage("Ok");
-                WriteGroup(Console.CursorLeft, Console.CursorTop);
+                await communication.AnswerAndWriteServer();
+                await communication.SendMessage("Ok");
+                await WriteGroup(Console.CursorLeft, Console.CursorTop);
                 lustTopPosition = Console.CursorTop;
             }
             if (cursorTop > lustTopPosition)
@@ -54,21 +54,21 @@ namespace User_Client
             Console.SetCursorPosition(weigh, top);
             Console.WriteLine(message);
         }
-        public void WriteGroup(int weigh, int top)
+        public async Task WriteGroup(int weigh, int top)
         {
-            AnswerServer();
+            await communication.AnswerServer();
             var countChats = Convert.ToInt32(communication.data.ToString());
             if (countChats == 0)
             {
-                SendMessage("Ok");
+                await communication.SendMessage("Ok");
                 WriteInSomePosition("(don`t have)", weigh, top);
             }
             else
             {
-                SendMessage("Send goups");
+                await communication.SendMessage("Send goups");
                 for (int i = 0; i < countChats; i++)
                 {
-                    AnswerServer();
+                    await communication.AnswerServer();
                     if (communication.data.Length > MaxWidth / 2)
                     {
                         top = WriteBigNameChat(weigh, top);
@@ -77,7 +77,7 @@ namespace User_Client
                     {
                         WriteInSomePosition($"{communication.data}", weigh, top);
                     }
-                    SendMessage("+");
+                    await communication.SendMessage("+");
                     top++;
                 }
             }
@@ -102,19 +102,5 @@ namespace User_Client
             }
             return top;
         }
-        private void AnswerAndWriteServer()
-        {
-            AnswerServer();
-            Console.WriteLine(communication.data);
-        }
-        private void AnswerServer()
-        {
-            communication.AnswerServer();
-        }
-        private void SendMessage(string message)
-        {
-            communication.SendMessage(message);
-        }
-
     }
 }

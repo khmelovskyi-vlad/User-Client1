@@ -18,35 +18,35 @@ namespace User_Client
         }
         private WriterGroups writerGroups;
         Communication communication;
-        public void SelectChat()
+        public async Task SelectChat()
         {
-            AnswerAndWriteServer();
+            await communication.AnswerAndWriteServer();
             while (!EndUsing)
             {
                 var line = Console.ReadLine();
                 if (line.Length != 0)
                 {
-                    SendMessage(line);
-                    AnswerAndWriteServer();
-                    ModeSelection(line);
+                    await communication.SendMessage(line);
+                    await communication.AnswerAndWriteServer();
+                    await ModeSelection(line);
                 }
             }
         }
         private bool EndUsing = false;
-        private void ModeSelection(string message)
+        private async Task ModeSelection(string message)
         {
             var serverMessage = communication.data.ToString();
             if (serverMessage == "Enter name of chat" || serverMessage == "Enter user name")
             {
-                FindGroup();
-                OpenChat();
+                await FindGroup();
+                await OpenChat();
             }
             else if (serverMessage == "If you want to join a group write: join\n\r" +
                 "if you want to look at the invitations, write: look")
             {
-                if (AcceptTheInvitation())
+                if (await AcceptTheInvitation())
                 {
-                    OpenChat();
+                    await OpenChat();
                 }
                 else
                 {
@@ -62,13 +62,13 @@ namespace User_Client
                 if (message.Length > 3 && message[0] == '?' && message[1] == '/')
                 {
                     var first4 = message.Substring(0, 4);
-                    SendMessage("I am waiting");
+                    await communication.SendMessage("I am waiting");
                     if (message == "?/ng")
                     {
-                        var needOpenChat = CreateNewGroup();
+                        var needOpenChat = await CreateNewGroup();
                         if (needOpenChat)
                         {
-                            OpenChat();
+                            await OpenChat();
                             return;
                         }
                         else
@@ -78,50 +78,50 @@ namespace User_Client
                     }
                     else if (first4 == "?/gg")
                     {
-                        writerGroups.Run(4);
+                        await writerGroups.Run(4);
                     }
                     else if (first4 == "?/cc")
                     {
-                        writerGroups.Run(6);
+                        await writerGroups.Run(6);
                     }
                     else if(first4 == "?/pp" || first4 == "?/ch" || first4 == "?/sg" || first4 == "?/ug" || first4 == "?/ii" || first4 == "?/pg")
                     {
-                        writerGroups.Run(1);
+                        await writerGroups.Run(1);
                     }
-                    AnswerAndWriteServer();
+                    await communication.AnswerAndWriteServer();
                 }
             }
         }
-        private bool AcceptTheInvitation()
+        private async Task<bool> AcceptTheInvitation()
         {
             while (true)
             {
                 var mode = Console.ReadLine();
                 if (mode.Length > 0)
                 {
-                    SendMessage(mode);
+                    await communication.SendMessage(mode);
                     if (mode == "look")
                     {
-                        writerGroups.Run(1);
+                        await writerGroups.Run(1);
                     }
                     else if (mode == "join")
                     {
-                        AnswerAndWriteServer();
+                        await communication.AnswerAndWriteServer();
                         while (true)
                         {
                             var groupName = Console.ReadLine();
                             if (groupName.Length > 0)
                             {
-                                SendMessage(groupName);
-                                AnswerAndWriteServer();
+                                await communication.SendMessage(groupName);
+                                await communication.AnswerAndWriteServer();
                                 if (communication.data.ToString() == "You have joined to the group\n\r" +
                                     "If you want to open chats, write: 'open'")
                                 {
                                     var enteranceToGroup = Console.ReadLine();
                                     if (enteranceToGroup.Length > 0)
                                     {
-                                        SendMessage(enteranceToGroup);
-                                        AnswerAndWriteServer();
+                                        await communication.SendMessage(enteranceToGroup);
+                                        await communication.AnswerAndWriteServer();
                                         if (communication.data.ToString() == "You enter to the group")
                                         {
                                             return true;
@@ -137,20 +137,20 @@ namespace User_Client
                     }
                     else
                     {
-                        AnswerAndWriteServer();
+                        await communication.AnswerAndWriteServer();
                     }
                 }
             }
         }
-        private void FindGroup()
+        private async Task FindGroup()
         {
             while (true)
             {
                 var line = Console.ReadLine();
                 if (line.Length > 0)
                 {
-                    SendMessage(line);
-                    AnswerAndWriteServer();
+                    await communication.SendMessage(line);
+                    await communication.AnswerAndWriteServer();
                     if (communication.data.ToString() == "You connect to chat")
                     {
                         return;
@@ -158,49 +158,49 @@ namespace User_Client
                 }
             }
         }
-        private void OpenChat()
+        private async Task OpenChat()
         {
             Chat chat = new Chat(communication);
-            chat.Run();
+            await chat.Run();
             chat.autoResetConnectAgain.WaitOne();
-            communication.SendMessage("I left the chat");
-            communication.AnswerAndWriteServer();
+            await communication.SendMessage("I left the chat");
+            await communication.AnswerAndWriteServer();
             while (true)
             {
                 var line = Console.ReadLine();
                 if (line.Length > 0)
                 {
-                    communication.SendMessage(line);
-                    communication.AnswerAndWriteServer();
-                    communication.SendMessage("Okey");
+                    await communication.SendMessage(line);
+                    await communication.AnswerAndWriteServer();
+                    await communication.SendMessage("Okey");
                     if (communication.data.ToString() == "You left the messanger")
                     {
                         EndUsing = true;
                         return;
                     }
-                    writerGroups.Run(6);
-                    AnswerAndWriteServer();
+                    await writerGroups.Run(6);
+                    await communication.AnswerAndWriteServer();
                     return;
                 }
             }
         }
-        private bool CreateNewGroup()
+        private async Task<bool> CreateNewGroup()
         {
             while (true)
             {
-                AnswerAndWriteServer();
-                WriteToServer("Enter a group name");
-                WriteToServer("Who do you want to invite to your group?\n\r" +
+                await communication.AnswerAndWriteServer();
+                await WriteToServer("Enter a group name");
+                await WriteToServer("Who do you want to invite to your group?\n\r" +
                             "If you want to check people, write ?/yes\n\r" +
                             "If you don`t want to add people, write ?/no\n\r");
-                WriteToServer("You create group, thanks.\n\r" +
+                await WriteToServer("You create group, thanks.\n\r" +
                     "If you want to open it, write ok, else - press else");
                 while (true)
                 {
                     var lineTwo = Console.ReadLine();
                     if (lineTwo.Length > 0)
                     {
-                        SendMessage(lineTwo);
+                        await communication.SendMessage(lineTwo);
                         if (lineTwo == "ok")
                         {
                             return true;
@@ -210,39 +210,26 @@ namespace User_Client
                 }
             }
         }
-        private void WriteToServer(string finalMesage)
+        private async Task WriteToServer(string finalMesage)
         {
             while (true)
             {
                 var line = Console.ReadLine();
                 if (line.Length > 0)
                 {
-                    SendMessage(line);
-                    AnswerAndWriteServer();
+                    await communication.SendMessage(line);
+                    await communication.AnswerAndWriteServer();
                     if (communication.data.ToString() == finalMesage)
                     {
                         break;
                     }
                     if (communication.data.ToString() == "People:")
                     {
-                        SendMessage("Ok");
-                        writerGroups.WriteGroup(Console.CursorLeft, Console.CursorTop);
+                        await communication.SendMessage("Ok");
+                        await writerGroups.WriteGroup(Console.CursorLeft, Console.CursorTop);
                     }
                 }
             }
-        }
-        private void AnswerAndWriteServer()
-        {
-            AnswerServer();
-            Console.WriteLine(communication.data);
-        }
-        private void AnswerServer()
-        {
-            communication.AnswerServer();
-        }
-        private void SendMessage(string message)
-        {
-            communication.SendMessage(message);
         }
     }
 }

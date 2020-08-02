@@ -19,144 +19,73 @@ namespace User_Client
         private byte[] buffer;
         public StringBuilder data;
         private const int size = 256;
-        AutoResetEvent resetSend = new AutoResetEvent(true);
-        AutoResetEvent resetReceive = new AutoResetEvent(false);
-        public void AnswerAndWriteToSecndWindow(SecondWindowServer secondWindowServer)
+        public async Task AnswerAndWriteToSecndWindow(SecondWindowServer secondWindowServer)
         {
-            AnswerServer();
+            await AnswerServer();
             secondWindowServer.Write(data.ToString());
         }
-        public void AnswerAndWriteServer()
+        public async Task AnswerAndWriteServer()
         {
-            AnswerServer();
+            await AnswerServer();
             Console.WriteLine(data);
         }
-        //public void AnswerServer()
-        //{
-        //    buffer = new byte[size];
-        //    data = new StringBuilder();
-        //    do
-        //    {
-        //        tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, ReceiveCallback, tcpSocket);
-        //        resetReceive.WaitOne();
-        //    } while (tcpSocket.Available > 0);
-        //}
-        public void AnswerServer()
+        public async Task AnswerServer()
         {
             buffer = new byte[size];
             data = new StringBuilder();
-            tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, ReceiveCallback, tcpSocket);
-            resetReceive.WaitOne();
+            do
+            {
+                try
+                {
+                    var received = await Task.Factory.FromAsync(tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, null, null),
+                        tcpSocket.EndReceive);
+                    data.Append(Encoding.ASCII.GetString(buffer, 0, received));
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Server forcefully disconnected");
+                    data = new StringBuilder();
+                    data.Append("?/you left the chat");
+                    return;
+                }
+            } while (tcpSocket.Available > 0);
         }
-        private void ReceiveCallback(IAsyncResult AR)
-        {
-            Socket current = (Socket)AR.AsyncState;
-            int received;
-            try
-            {
-                received = current.EndReceive(AR);
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Server forcefully disconnected");
-                resetReceive.Set();
-                data = new StringBuilder();
-                data.Append("?/you left the chat");
-                return;
-            }
-            if (received > 0)
-            {
-                data.Append(Encoding.ASCII.GetString(buffer, 0, received));
-            }
-            if (current.Available > 0)
-            {
-                current.BeginReceive(buffer, 0, size, SocketFlags.None, ReceiveCallback, current);
-            }
-            else
-            {
-                resetReceive.Set();
-            }
-        }
-        //private void ReceiveCallback(IAsyncResult AR)
-        //{
-        //    Socket current = (Socket)AR.AsyncState;
-        //    int received;
-
-        //    try
-        //    {
-        //        received = current.EndReceive(AR);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        Console.WriteLine("Server forcefully disconnected");
-        //        resetReceive.Set();
-        //        data = new StringBuilder();
-        //        data.Append("?/you left the chat");
-        //        return;
-        //    }
-        //    data.Append(Encoding.ASCII.GetString(buffer, 0, received));
-        //    resetReceive.Set();
-        //}
-        public void SendMessage(string message)
+        public async Task SendMessage(string message)
         {
             if (message == "??")
             {
                 throw new OperationCanceledException();
             }
-            resetSend.WaitOne();
             byte[] byteData = Encoding.ASCII.GetBytes(message);
-            tcpSocket.BeginSend(byteData, 0, byteData.Length, 0, SendCallback, tcpSocket);
+            await Task.Factory.FromAsync(tcpSocket.BeginSend(byteData, 0, byteData.Length, 0, null, null), tcpSocket.EndReceive);
         }
-        private void SendCallback(IAsyncResult AR)
+        public async Task SendFile(string path, string fileName)
         {
-            Socket current = (Socket)AR.AsyncState;
-            try
-            {
-                current.EndSend(AR);
-            }
-            catch (SocketException)
-            {
-                Console.WriteLine("Can`t send message");
-            }
-            resetSend.Set();
-        }
-        public void SendFile(string path, string fileName)
-        {
-            SendMessage(fileName);
-            AnswerServer();
+            await SendMessage(fileName);
+            await AnswerServer();
             var length = new FileInfo(path).Length;
             var lengthByte = BitConverter.GetBytes(length);
-            //tcpSocket.ReceiveAsync(path, lengthByte, null, TransmitFileOptions.UseKernelApc);
-            tcpSocket.BeginSendFile(path, lengthByte, null, TransmitFileOptions.UseKernelApc, SendFileCallback, tcpSocket);
-            resetSend.WaitOne();
+            await Task.Factory.FromAsync(
+                tcpSocket.BeginSendFile(path, lengthByte, null, TransmitFileOptions.UseDefaultWorkerThread, null, null),
+                tcpSocket.EndSendFile);
         }
-        public void ReciveFile(string path)
+        public async Task ReciveFile(string path)
         {
-            buffer = new byte[8];
-            var bufferSize = tcpSocket.Receive(buffer);
-            var fileLength = BitConverter.ToInt64(buffer, 0);
+            var byteCount = 8;
+            var bufferFileLength = new byte[byteCount];
+            await Task.Factory.FromAsync(tcpSocket.BeginReceive(bufferFileLength, 0, byteCount, SocketFlags.None, null, null),
+                tcpSocket.EndReceive);
+            var fileLength = BitConverter.ToInt64(bufferFileLength, 0);
             using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.Write))
             {
                 buffer = new byte[size];
                 do
                 {
-                    bufferSize = tcpSocket.Receive(buffer);
-                    stream.Write(buffer, 0, bufferSize);
+                    var received = await Task.Factory.FromAsync(tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, null, null),
+                        tcpSocket.EndReceive);
+                    await stream.WriteAsync(buffer, 0, received);
                 } while (stream.Length != fileLength);
             }
-        }
-        private void SendFileCallback(IAsyncResult AR)
-        {
-            Socket current = (Socket)AR.AsyncState;
-            try
-            {
-                current.EndSendFile(AR);
-            }
-            catch (SocketException)
-            {
-                Console.WriteLine("Can`t send file");
-            }
-            resetSend.Set();
         }
     }
 }
