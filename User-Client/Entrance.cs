@@ -188,7 +188,7 @@ namespace User_Client
                         return new string[] { nick, password };
                     }
                 }
-                var key = Console.ReadKey();
+                var key = Console.ReadKey(true);
                 if (key.Key != ConsoleKey.Enter)
                 {
                     await communication.SendMessage("No");
