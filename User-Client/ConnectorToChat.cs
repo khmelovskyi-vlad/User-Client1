@@ -17,23 +17,23 @@ namespace User_Client
             this.writerGroups = writerGroups;
         }
         private WriterGroups writerGroups;
-        Communication communication;
+        private Communication communication;
+        private bool EndUsing = false;
         public async Task SelectChat()
         {
             await communication.AnswerAndWriteServer();
             while (!EndUsing)
             {
-                var line = Console.ReadLine();
-                if (line.Length != 0)
+                var myMessage = Console.ReadLine();
+                if (myMessage.Length != 0)
                 {
-                    await communication.SendMessage(line);
+                    await communication.SendMessage(myMessage);
                     await communication.AnswerAndWriteServer();
-                    await ModeSelection(line);
+                    await SelectMode(myMessage);
                 }
             }
         }
-        private bool EndUsing = false;
-        private async Task ModeSelection(string message)
+        private async Task SelectMode(string myMessage)
         {
             var serverMessage = communication.data.ToString();
             if (serverMessage == "Enter name of chat" || serverMessage == "Enter user name")
@@ -59,37 +59,41 @@ namespace User_Client
             }
             else
             {
-                if (message.Length > 3 && message[0] == '?' && message[1] == '/')
+                await SelectModeAccordingMyMessage(myMessage);
+            }
+        }
+        private async Task SelectModeAccordingMyMessage(string myMessage)
+        {
+            if (myMessage.Length > 3 && myMessage[0] == '?' && myMessage[1] == '/')
+            {
+                var first4 = myMessage.Substring(0, 4);
+                await communication.SendMessage("I am waiting");
+                if (myMessage == "?/ng")
                 {
-                    var first4 = message.Substring(0, 4);
-                    await communication.SendMessage("I am waiting");
-                    if (message == "?/ng")
+                    var needOpenChat = await CreateNewGroup();
+                    if (needOpenChat)
                     {
-                        var needOpenChat = await CreateNewGroup();
-                        if (needOpenChat)
-                        {
-                            await OpenChat();
-                            return;
-                        }
-                        else
-                        {
-                            EndUsing = true;
-                        }
+                        await OpenChat();
+                        return;
                     }
-                    else if (first4 == "?/gg")
+                    else
                     {
-                        await writerGroups.Run(4);
+                        EndUsing = true;
                     }
-                    else if (first4 == "?/cc")
-                    {
-                        await writerGroups.Run(6);
-                    }
-                    else if(first4 == "?/pp" || first4 == "?/ch" || first4 == "?/sg" || first4 == "?/ug" || first4 == "?/ii" || first4 == "?/pg")
-                    {
-                        await writerGroups.Run(1);
-                    }
-                    await communication.AnswerAndWriteServer();
                 }
+                else if (first4 == "?/gg")
+                {
+                    await writerGroups.Run(4);
+                }
+                else if (first4 == "?/cc")
+                {
+                    await writerGroups.Run(6);
+                }
+                else if (first4 == "?/pp" || first4 == "?/ch" || first4 == "?/sg" || first4 == "?/ug" || first4 == "?/ii" || first4 == "?/pg")
+                {
+                    await writerGroups.Run(1);
+                }
+                await communication.AnswerAndWriteServer();
             }
         }
         private async Task<bool> AcceptTheInvitation()

@@ -33,6 +33,10 @@ namespace User_Client
             await communication.SendMessage("ok");
             await WriteMessages();
             AnswerUsers();
+            await Communicate();
+        }
+        private async Task Communicate()
+        {
             while (true)
             {
                 var line = Console.ReadLine();
