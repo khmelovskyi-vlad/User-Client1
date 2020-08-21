@@ -28,14 +28,14 @@ namespace User_Client
                 if (i > 1)
                 {
                     Console.SetCursorPosition(halfOfMaxWidth, cursorTop);
-                    await communication.AnswerAndWriteServer();
+                    await communication.ListenServerWrite();
                     cursorTop = Console.CursorTop;
                     await communication.SendMessage("Ok");
                     await WriteGroup(halfOfMaxWidth, cursorTop);
                     cursorTop = Console.CursorTop;
                     continue;
                 }
-                await communication.AnswerAndWriteServer();
+                await communication.ListenServerWrite();
                 await communication.SendMessage("Ok");
                 await WriteGroup(Console.CursorLeft, Console.CursorTop);
                 lustTopPosition = Console.CursorTop;
@@ -56,7 +56,7 @@ namespace User_Client
         }
         public async Task WriteGroup(int weigh, int top)
         {
-            await communication.AnswerServer();
+            await communication.ListenServer();
             var countChats = Convert.ToInt32(communication.data.ToString());
             if (countChats == 0)
             {
@@ -68,7 +68,7 @@ namespace User_Client
                 await communication.SendMessage("Send goups");
                 for (int i = 0; i < countChats; i++)
                 {
-                    await communication.AnswerServer();
+                    await communication.ListenServer();
                     if (communication.data.Length > MaxWidth / 2)
                     {
                         top = WriteBigNameChat(weigh, top);

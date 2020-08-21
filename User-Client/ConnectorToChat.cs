@@ -21,14 +21,14 @@ namespace User_Client
         private bool EndUsing = false;
         public async Task SelectChat()
         {
-            await communication.AnswerAndWriteServer();
+            await communication.ListenServerWrite();
             while (!EndUsing)
             {
                 var myMessage = Console.ReadLine();
                 if (myMessage.Length != 0)
                 {
                     await communication.SendMessage(myMessage);
-                    await communication.AnswerAndWriteServer();
+                    await communication.ListenServerWrite();
                     await SelectMode(myMessage);
                 }
             }
@@ -93,7 +93,7 @@ namespace User_Client
                 {
                     await writerGroups.Run(1);
                 }
-                await communication.AnswerAndWriteServer();
+                await communication.ListenServerWrite();
             }
         }
         private async Task<bool> AcceptTheInvitation()
@@ -110,14 +110,14 @@ namespace User_Client
                     }
                     else if (mode == "join")
                     {
-                        await communication.AnswerAndWriteServer();
+                        await communication.ListenServerWrite();
                         while (true)
                         {
                             var groupName = Console.ReadLine();
                             if (groupName.Length > 0)
                             {
                                 await communication.SendMessage(groupName);
-                                await communication.AnswerAndWriteServer();
+                                await communication.ListenServerWrite();
                                 if (communication.data.ToString() == "You have joined to the group\n\r" +
                                     "If you want to open chats, write: 'open'")
                                 {
@@ -125,7 +125,7 @@ namespace User_Client
                                     if (enteranceToGroup.Length > 0)
                                     {
                                         await communication.SendMessage(enteranceToGroup);
-                                        await communication.AnswerAndWriteServer();
+                                        await communication.ListenServerWrite();
                                         if (communication.data.ToString() == "You enter to the group")
                                         {
                                             return true;
@@ -141,7 +141,7 @@ namespace User_Client
                     }
                     else
                     {
-                        await communication.AnswerAndWriteServer();
+                        await communication.ListenServerWrite();
                     }
                 }
             }
@@ -154,7 +154,7 @@ namespace User_Client
                 if (line.Length > 0)
                 {
                     await communication.SendMessage(line);
-                    await communication.AnswerAndWriteServer();
+                    await communication.ListenServerWrite();
                     if (communication.data.ToString() == "You connect to chat")
                     {
                         return;
@@ -168,14 +168,14 @@ namespace User_Client
             await chat.Run();
             chat.autoResetConnectAgain.WaitOne();
             await communication.SendMessage("I left the chat");
-            await communication.AnswerAndWriteServer();
+            await communication.ListenServerWrite();
             while (true)
             {
                 var line = Console.ReadLine();
                 if (line.Length > 0)
                 {
                     await communication.SendMessage(line);
-                    await communication.AnswerAndWriteServer();
+                    await communication.ListenServerWrite();
                     await communication.SendMessage("Okey");
                     if (communication.data.ToString() == "You left the messanger")
                     {
@@ -183,7 +183,7 @@ namespace User_Client
                         return;
                     }
                     await writerGroups.Run(6);
-                    await communication.AnswerAndWriteServer();
+                    await communication.ListenServerWrite();
                     return;
                 }
             }
@@ -192,7 +192,7 @@ namespace User_Client
         {
             while (true)
             {
-                await communication.AnswerAndWriteServer();
+                await communication.ListenServerWrite();
                 await WriteToServer("Enter a group name");
                 await WriteToServer("Who do you want to invite to your group?\n\r" +
                             "If you want to check people, write ?/yes\n\r" +
@@ -222,7 +222,7 @@ namespace User_Client
                 if (line.Length > 0)
                 {
                     await communication.SendMessage(line);
-                    await communication.AnswerAndWriteServer();
+                    await communication.ListenServerWrite();
                     if (communication.data.ToString() == finalMesage)
                     {
                         break;

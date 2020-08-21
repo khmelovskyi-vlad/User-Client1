@@ -101,7 +101,7 @@ namespace User_Client
                         else if (oneUserNicknameAndPassword.Nickname == userNicknameAndPassword.Nickname &&
                             oneUserNicknameAndPassword.Password != userNicknameAndPassword.Password)
                         {
-                            Console.WriteLine("You have this nickname but have another password,\n\r" +
+                            Console.WriteLine($"You have this nickname but have another password,{Environment.NewLine}" +
                                 "If you want to change data, click 'Enter'");
                             var chackRewrite = Console.ReadKey(true);
                             if (chackRewrite.Key == ConsoleKey.Enter)
@@ -158,15 +158,15 @@ namespace User_Client
         }
         private async Task<bool> EnterWithSavedAccount(UserNicknameAndPassword userNicknameAndPassword)
         {
-            await communication.AnswerServer();
+            await communication.ListenServer();
             if (communication.data.ToString() == "Enter a nickname")
             {
                 await communication.SendMessage(userNicknameAndPassword.Nickname);
-                await communication.AnswerServer();
+                await communication.ListenServer();
                 if (communication.data.ToString() == "Enter password bigger than 7 symbols")
                 {
                     await communication.SendMessage(userNicknameAndPassword.Password);
-                    await communication.AnswerAndWriteServer();
+                    await communication.ListenServerWrite();
                     if (communication.data.ToString() == "You enter to messenger")
                     {
                         return true;
@@ -187,67 +187,60 @@ namespace User_Client
                     {
                         return new string[] { nick, password };
                     }
-                }
-                var key = Console.ReadKey(true);
-                if (key.Key != ConsoleKey.Enter)
-                {
-                    await communication.SendMessage("No");
-                    return new string[0];
-                }
-                await communication.SendMessage("Enter");
-            }
-        }
-        private async Task<string> EnterNickname()
-        {
-            await communication.AnswerAndWriteServer();
-            while (true)
-            {
-                var nickname = Console.ReadLine();
-                if (nickname.Length > 0)
-                {
-                    await communication.SendMessage(nickname);
-                    await communication.AnswerAndWriteServer();
-                    var s = communication.data.ToString().Substring(communication.data.ToString().Length - 5);
-                    if (communication.data.ToString() == "Enter password bigger than 7 symbols")
+                    else
                     {
-                        return nickname;
-                    }
-                    else if (s == "Enter")
-                    {
-                        return "";
+                        return new string[0];
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Nickname length < 1");
+                    return new string[0];
+                }
+            }
+        }
+        private async Task<string> EnterNickname()
+        {
+            await communication.ListenServerWrite();
+            while (true)
+            {
+                var nickname = Console.ReadLine();
+                var message = await communication.SendMessageListenServerWrite(nickname);
+                if (message == "Enter password bigger than 7 symbols")
+                {
+                    return nickname;
+                }
+                else if (message == "Number of attempts 0, so bye")
+                {
+                    return "";
                 }
             }
         }
         private async Task<string> EnterPassword()
         {
-            var i = 0;
             StringBuilder password = new StringBuilder();
             while (true)
             {
                 var key = Console.ReadKey(true);
                 if (key.Key == ConsoleKey.Enter)
                 {
-                    i++;
-                    await communication.SendMessage(password.ToString());
-                    await communication.AnswerServer();
-                    if (communication.data.ToString() == "You enter to messenger")
+                    var message = await communication.SendMessageListenServer(password.ToString());
+                    if (message == "You enter to messenger")
                     {
                         Console.WriteLine();
                         return password.ToString();
                     }
-                    else if (communication.data.ToString() == "This nickname is currently in use, bye" ||
-                        communication.data.ToString().Substring(communication.data.Length - 5) == "Enter")
+                    else if (message == "This nickname is currently in use, bye")
                     {
-                        Console.WriteLine($"\n\r{communication.data}");
+                        Console.WriteLine($"{Environment.NewLine}{message}");
+                        return "";
+                    }
+                    else if (message == "Number of attempts 0, so bye")
+                    {
+                        Console.WriteLine($"{Environment.NewLine}{message}");
                         return "";
                     }
                     password = new StringBuilder();
-                    Console.WriteLine($"\n{communication.data}");
+                    Console.WriteLine($"{Environment.NewLine}{message}");
                 }
                 else if (key.Key == ConsoleKey.Backspace)
                 {
@@ -274,7 +267,7 @@ namespace User_Client
         }
         public async Task<bool> ModeSelection()
         {
-            await communication.AnswerAndWriteServer();
+            await communication.ListenServerWrite();
             var successConnect = false;
             var key = Console.ReadKey(true);
 
@@ -302,16 +295,16 @@ namespace User_Client
         private async Task<bool> EscapeServer()
         {
             await communication.SendMessage("escape");
-            await communication.AnswerAndWriteServer();
+            await communication.ListenServerWrite();
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
                 await communication.SendMessage("Yes");
-                await communication.AnswerAndWriteServer();
+                await communication.ListenServerWrite();
                 return false;
             }
             await communication.SendMessage("No");
-            await communication.AnswerAndWriteServer();
+            await communication.ListenServerWrite();
             await communication.SendMessage("Ok");
             return await ModeSelection();
         }
@@ -323,7 +316,7 @@ namespace User_Client
             {
                 return false;
             }
-            await communication.AnswerAndWriteServer();
+            await communication.ListenServerWrite();
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
@@ -334,7 +327,7 @@ namespace User_Client
                 await communication.SendMessage("No");
                 return false;
             }
-            await communication.AnswerAndWriteServer();
+            await communication.ListenServerWrite();
             await DeleteAccountData(userData);
             return false;
         }

@@ -89,7 +89,7 @@ namespace User_Client
         }
         private string[] EnterData()
         {
-            var ip = "192.168.88.167";
+            var ip = "192.168.88.165";
             //var ip = "192.168.1.12";
             var port = "1234";
             //var ip = EnterSomeData("Enter your IP");

@@ -26,10 +26,10 @@ namespace User_Client
             await communication.SendMessage("okey");
             Task.Run(() => secondWindowServer.Run());
             secondWindowServer.autoResetCreated.WaitOne();
-            await communication.AnswerServer();
+            await communication.ListenServer();
             TypeChat = communication.data.ToString();
             await communication.SendMessage("ok");
-            await communication.AnswerAndWriteServer();
+            await communication.ListenServerWrite();
             await communication.SendMessage("ok");
             await WriteMessages();
             AnswerUsers();
@@ -105,7 +105,7 @@ namespace User_Client
                 if (userNick.Length > 0)
                 {
                     await communication.SendMessage(userNick);
-                    await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                    await communication.ListenServerWriteToSecondWindow(secondWindowServer);
                     return;
                 }
             }
@@ -118,14 +118,14 @@ namespace User_Client
                 if (typeNewGroup == "public" || typeNewGroup == "secret")
                 {
                     await communication.SendMessage(typeNewGroup);
-                    await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                    await communication.ListenServerWriteToSecondWindow(secondWindowServer);
                     while (true)
                     {
                         var nameNewGroup = Console.ReadLine();
                         if (nameNewGroup.Length > 0)
                         {
                             await communication.SendMessage(nameNewGroup);
-                            await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                            await communication.ListenServerWriteToSecondWindow(secondWindowServer);
                             if (communication.data.ToString() == $"New group have {typeNewGroup} type and name {nameNewGroup}")
                             {
                                 ChangeTypeGroup(typeNewGroup);
@@ -172,7 +172,7 @@ namespace User_Client
             }
             var fileName = Path.GetFileName(path);
             await communication.SendFile(path, fileName);
-            await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+            await communication.ListenServerWriteToSecondWindow(secondWindowServer);
         }
         private async Task ReceiveFile()
         {
@@ -182,7 +182,7 @@ namespace User_Client
                 if (fileName.Length > 0)
                 {
                     await communication.SendMessage(fileName);
-                    await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                    await communication.ListenServerWriteToSecondWindow(secondWindowServer);
                     await CheckFindedFile(fileName);
                     return;
                 }
@@ -202,7 +202,7 @@ namespace User_Client
                     if (dateFile.Length > 0)
                     {
                         await communication.SendMessage(dateFile);
-                        await communication.AnswerAndWriteToSecndWindow(secondWindowServer);
+                        await communication.ListenServerWriteToSecondWindow(secondWindowServer);
                         if (communication.data.ToString() == "Finded")
                         {
                             await FindNameAndRecive();
@@ -272,7 +272,7 @@ namespace User_Client
         {
             while (true)
             {
-                await communication.AnswerServer();
+                await communication.ListenServer();
                 var message = communication.data.ToString();
                 secondWindowServer.Write(message);
                 autoResetMessage.WaitOne();
@@ -286,12 +286,12 @@ namespace User_Client
         }
         private async Task WriteMessages()
         {
-            await communication.AnswerServer();
+            await communication.ListenServer();
             await communication.SendMessage("ok");
             var count = Convert.ToInt32(communication.data.ToString());
             for (int i = 0; i < count; i++)
             {
-                await communication.AnswerServer();
+                await communication.ListenServer();
                 secondWindowServer.Write(communication.data.ToString());
                 await communication.SendMessage("ok");
             }
