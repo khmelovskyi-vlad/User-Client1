@@ -18,7 +18,7 @@ namespace User_Client
         private Socket tcpSocket { get; }
         private byte[] buffer;
         public StringBuilder data;
-        private const int size = 256;
+        private int size = 256;
         public async Task ListenServerWriteToSecondWindow(SecondWindowServer secondWindowServer)
         {
             await ListenServer();
@@ -45,16 +45,28 @@ namespace User_Client
             try
             {
                 var mesLength = await FindMessageLength();
+                if (mesLength < size)
+                {
+                    size = (int)mesLength;
+                }
                 buffer = new byte[size];
                 data = new StringBuilder();
-                while (mesLength != data.Length)
+                while (mesLength != 0)
                 {
                     var received = await Task.Factory.FromAsync(tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, null, null), tcpSocket.EndReceive);
                     data.Append(Encoding.ASCII.GetString(buffer, 0, received));
-                } 
+                    mesLength = mesLength - received;
+                    if (mesLength < size)
+                    {
+                        size = (int)mesLength;
+                        buffer = new byte[size];
+                    }
+                }
+                size = 256;
             }
             catch (Exception)
             {
+                size = 256;
                 Console.WriteLine("Server forcefully disconnected");
                 data = new StringBuilder();
                 data.Append("?/you left the chat");

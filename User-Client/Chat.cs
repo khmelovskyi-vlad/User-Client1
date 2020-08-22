@@ -23,14 +23,10 @@ namespace User_Client
         public async Task Run()
         {
             //Interlocked
-            await communication.SendMessage("okey");
             Task.Run(() => secondWindowServer.Run());
             secondWindowServer.autoResetCreated.WaitOne();
-            await communication.ListenServer();
-            TypeChat = communication.data.ToString();
-            await communication.SendMessage("ok");
+            TypeChat = await communication.ListenServer();
             await communication.ListenServerWrite();
-            await communication.SendMessage("ok");
             await WriteMessages();
             AnswerUsers();
             await Communicate();
@@ -287,13 +283,10 @@ namespace User_Client
         private async Task WriteMessages()
         {
             await communication.ListenServer();
-            await communication.SendMessage("ok");
             var count = Convert.ToInt32(communication.data.ToString());
             for (int i = 0; i < count; i++)
             {
-                await communication.ListenServer();
-                secondWindowServer.Write(communication.data.ToString());
-                await communication.SendMessage("ok");
+                secondWindowServer.Write(await communication.ListenServer());
             }
         }
     }

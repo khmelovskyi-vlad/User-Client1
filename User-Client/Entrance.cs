@@ -68,10 +68,9 @@ namespace User_Client
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                userNicknamesAndPasswords = await fileMaster.ReadData<UserNicknameAndPassword>(FilePath);
+                var userNicknamesAndPasswords = await fileMaster.ReadData<UserNicknameAndPassword>(FilePath);
                 if (userNicknamesAndPasswords.Count() != 0)
                 {
-                    Console.WriteLine(userNicknamesAndPasswords.Count());
                     userNicknamesAndPasswords = userNicknamesAndPasswords
                         .Where(acc => acc.Nickname != userData[0] || acc.Password != userData[1])
                         .ToList();
@@ -86,7 +85,7 @@ namespace User_Client
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                userNicknamesAndPasswords = await fileMaster.ReadData<UserNicknameAndPassword>(FilePath);
+                var userNicknamesAndPasswords = await fileMaster.ReadData<UserNicknameAndPassword>(FilePath);
                 UserNicknameAndPassword userNicknameAndPassword = new UserNicknameAndPassword(userData[0], userData[1]);
                 if (userNicknamesAndPasswords.Count() != 0)
                 {
@@ -125,10 +124,9 @@ namespace User_Client
                 Console.WriteLine("Saving is successful");
             }
         }
-        List<UserNicknameAndPassword> userNicknamesAndPasswords;
         private async Task<bool> FindAccountAndEnter()
         {
-            userNicknamesAndPasswords = await fileMaster.ReadData<UserNicknameAndPassword>(FilePath);
+            var userNicknamesAndPasswords = await fileMaster.ReadData<UserNicknameAndPassword>(FilePath);
             if (userNicknamesAndPasswords != null)
             {
                 foreach (var userNicknameAndPassword in userNicknamesAndPasswords)
@@ -158,16 +156,11 @@ namespace User_Client
         }
         private async Task<bool> EnterWithSavedAccount(UserNicknameAndPassword userNicknameAndPassword)
         {
-            await communication.ListenServer();
-            if (communication.data.ToString() == "Enter a nickname")
+            if (await communication.ListenServer() == "Enter a nickname")
             {
-                await communication.SendMessage(userNicknameAndPassword.Nickname);
-                await communication.ListenServer();
-                if (communication.data.ToString() == "Enter password bigger than 7 symbols")
+                if (await communication.SendMessageListenServer(userNicknameAndPassword.Nickname) == "Enter password bigger than 7 symbols")
                 {
-                    await communication.SendMessage(userNicknameAndPassword.Password);
-                    await communication.ListenServerWrite();
-                    if (communication.data.ToString() == "You enter to messenger")
+                    if (await communication.SendMessageListenServerWrite(userNicknameAndPassword.Password) == "You enter to messenger")
                     {
                         return true;
                     }
@@ -294,18 +287,14 @@ namespace User_Client
         }
         private async Task<bool> EscapeServer()
         {
-            await communication.SendMessage("escape");
-            await communication.ListenServerWrite();
+            await communication.SendMessageListenServerWrite("escape");
             var key = Console.ReadKey(true);
             if (key.Key == ConsoleKey.Enter)
             {
-                await communication.SendMessage("Yes");
-                await communication.ListenServerWrite();
+                await communication.SendMessageListenServerWrite("Yes");
                 return false;
             }
-            await communication.SendMessage("No");
-            await communication.ListenServerWrite();
-            await communication.SendMessage("Ok");
+            await communication.SendMessageListenServerWrite("No");
             return await ModeSelection();
         }
         private async Task<bool> DeleteAccount()
@@ -325,11 +314,17 @@ namespace User_Client
             else
             {
                 await communication.SendMessage("No");
+                return await ModeSelection();
+            }
+            if (await communication.ListenServerWrite() == "Account was deleted")
+            {
+                await DeleteAccountData(userData);
                 return false;
             }
-            await communication.ListenServerWrite();
-            await DeleteAccountData(userData);
-            return false;
+            else
+            {
+                return await ModeSelection();
+            }
         }
     }
 }

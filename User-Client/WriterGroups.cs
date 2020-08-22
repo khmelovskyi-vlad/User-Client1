@@ -30,13 +30,11 @@ namespace User_Client
                     Console.SetCursorPosition(halfOfMaxWidth, cursorTop);
                     await communication.ListenServerWrite();
                     cursorTop = Console.CursorTop;
-                    await communication.SendMessage("Ok");
                     await WriteGroup(halfOfMaxWidth, cursorTop);
                     cursorTop = Console.CursorTop;
                     continue;
                 }
                 await communication.ListenServerWrite();
-                await communication.SendMessage("Ok");
                 await WriteGroup(Console.CursorLeft, Console.CursorTop);
                 lustTopPosition = Console.CursorTop;
             }
@@ -56,48 +54,44 @@ namespace User_Client
         }
         public async Task WriteGroup(int weigh, int top)
         {
-            await communication.ListenServer();
-            var countChats = Convert.ToInt32(communication.data.ToString());
+            var countChats = Convert.ToInt32(await communication.ListenServer());
             if (countChats == 0)
             {
-                await communication.SendMessage("Ok");
                 WriteInSomePosition("(don`t have)", weigh, top);
             }
             else
             {
-                await communication.SendMessage("Send goups");
                 for (int i = 0; i < countChats; i++)
                 {
-                    await communication.ListenServer();
-                    if (communication.data.Length > MaxWidth / 2)
+                    var group = await communication.ListenServer();
+                    if (group.Length > MaxWidth / 2)
                     {
-                        top = WriteBigNameChat(weigh, top);
+                        top = WriteBigNameChat(group, weigh, top);
                     }
                     else
                     {
-                        WriteInSomePosition($"{communication.data}", weigh, top);
+                        WriteInSomePosition(group, weigh, top);
                     }
-                    await communication.SendMessage("+");
                     top++;
                 }
             }
         }
-        private int WriteBigNameChat(int weidth, int top)
+        private int WriteBigNameChat(string group, int weidth, int top)
         {
             var firstWeidth = weidth;
             var halfOfMaxWidth = MaxWidth / 2 - 1;
-            for (int i = 0; i < communication.data.Length; i++)
+            for (int i = 0; i < group.Length; i++)
             {
                 if (i % halfOfMaxWidth == 0 && i != 0)
                 {
                     top++;
                     Console.SetCursorPosition(firstWeidth, top);
                     weidth = firstWeidth + 1;
-                    Console.WriteLine(communication.data[i]);
+                    Console.WriteLine(group[i]);
                     continue;
                 }
                 Console.SetCursorPosition(weidth, top);
-                Console.Write(communication.data[i]);
+                Console.Write(group[i]);
                 weidth++;
             }
             return top;
