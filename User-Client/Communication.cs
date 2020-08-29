@@ -16,13 +16,12 @@ namespace User_Client
             this.tcpSocket = tcpSocket;
         }
         private Socket tcpSocket { get; }
-        private byte[] buffer;
-        public StringBuilder data;
-        private int size = 256;
-        public async Task ListenServerWriteToSecondWindow(SecondWindowServer secondWindowServer)
+        private const int size = 256;
+        public async Task<string> ListenServerWriteToSecondWindow(SecondWindowServer secondWindowServer)
         {
-            await ListenServer();
-            secondWindowServer.Write(data.ToString());
+            var message = await ListenServer();
+            secondWindowServer.Write(message);
+            return message;
         }
         public async Task<string> ListenServerWrite()
         {
@@ -45,34 +44,26 @@ namespace User_Client
             try
             {
                 var mesLength = await FindMessageLength();
-                if (mesLength < size)
+                var bufferSize = size;
+                var buffer = new byte[bufferSize];
+                var data = new StringBuilder();
+                while (mesLength != data.Length)
                 {
-                    size = (int)mesLength;
-                }
-                buffer = new byte[size];
-                data = new StringBuilder();
-                while (mesLength != 0)
-                {
-                    var received = await Task.Factory.FromAsync(tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, null, null), tcpSocket.EndReceive);
-                    data.Append(Encoding.ASCII.GetString(buffer, 0, received));
-                    mesLength = mesLength - received;
-                    if (mesLength < size)
+                    if (mesLength - data.Length < bufferSize)
                     {
-                        size = (int)mesLength;
-                        buffer = new byte[size];
+                        bufferSize = (int)(mesLength - data.Length);
+                        buffer = new byte[bufferSize];
                     }
+                    var received = await Task.Factory.FromAsync(tcpSocket.BeginReceive(buffer, 0, bufferSize, SocketFlags.None, null, null), tcpSocket.EndReceive);
+                    data.Append(Encoding.ASCII.GetString(buffer, 0, received));
                 }
-                size = 256;
+                return data.ToString();
             }
             catch (Exception)
             {
-                size = 256;
                 Console.WriteLine("Server forcefully disconnected");
-                data = new StringBuilder();
-                data.Append("?/you left the chat");
-                return data.ToString();
+                return "?/you left the chat";
             }
-            return data.ToString();
         }
         public async Task SendMessage(string message)
         {
@@ -192,10 +183,8 @@ namespace User_Client
 
 
 
-        public async Task SendFile(string path, string fileName)
+        public async Task SendFile(string path)
         {
-            await SendMessage(fileName);
-            await ListenServer();
             var lengthByte = CreateFirstMessage(new FileInfo(path).Length);
             await Task.Factory.FromAsync(
                 tcpSocket.BeginSendFile(path, lengthByte, null, TransmitFileOptions.UseDefaultWorkerThread, null, null),
@@ -206,7 +195,7 @@ namespace User_Client
             var fileLength = await FindMessageLength();
             using (var stream = File.Open(path, FileMode.OpenOrCreate, FileAccess.Write))
             {
-                buffer = new byte[size];
+                var buffer = new byte[size];
                 while (stream.Length != fileLength)
                 {
                     var received = await Task.Factory.FromAsync(tcpSocket.BeginReceive(buffer, 0, size, SocketFlags.None, null, null),

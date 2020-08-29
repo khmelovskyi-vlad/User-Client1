@@ -38,51 +38,14 @@ namespace User_Client
                 var line = Console.ReadLine();
                 if (line.Length > 0)
                 {
-                    if (line == "?/send" || line == "?/download" || line == "?/change" || line == "?/invite" || line == "?/delete"
-                        || line == "?/leave a group" || line == "?/end")
+                    if (line == "?/")
                     {
                         autoResetMessage.WaitOne();
                         await communication.SendMessage(line);
-                        switch (line)
-                        {
-                            case "?/send":
-                                await SendFile();
-                                break;
-                            case "?/download":
-                                await ReceiveFile();
-                                break;
-                            case "?/change":
-                                if (TypeChat == "pp" || TypeChat == "ch")
-                                {
-                                    await ChangeTypeGroup();
-                                    break;
-                                }
-                                autoResetMessage.Set();
-                                continue;
-                            case "?/invite":
-                                if (TypeChat == "pg" || TypeChat == "ug" || TypeChat == "sg")
-                                {
-                                    await InviteOrDeleteUser();
-                                    break;
-                                }
-                                autoResetMessage.Set();
-                                continue;
-                            case "?/delete":
-                                await InviteOrDeleteUser();
-                                break;
-                            case "?/leave a group":
-                                var successLeave = await LeaveGroup();
-                                if (successLeave)
-                                {
-                                    autoResetMessage.Set();
-                                    return;
-                                }
-                                break;
-                            case "?/end":
-                                autoResetMessage.Set();
-                                return;
-                        }
-                        await communication.SendMessage("okey");
+                        var mode = Console.ReadLine();
+                        await communication.SendMessageListenServerWrite(mode);
+                        await RunModeSession(mode);
+                        
                         await WriteMessages();
                         autoResetMessage.Set();
                     }
@@ -91,6 +54,44 @@ namespace User_Client
                         await communication.SendMessage(line);
                     }
                 }
+            }
+        }
+        private async Task RunModeSession(string mode)
+        {
+            switch (mode)
+            {
+                case "?/send":
+                    await SendFile();
+                    return;
+                case "?/download":
+                    await ReceiveFile();
+                    return;
+                case "?/change":
+                    if (TypeChat == "pp" || TypeChat == "ch")
+                    {
+                        await ChangeTypeGroup();
+                    }
+                    return;
+                case "?/invite":
+                    if (TypeChat == "pg" || TypeChat == "ug" || TypeChat == "sg")
+                    {
+                        await InviteOrDeleteUser();
+                    }
+                    return;
+                case "?/delete":
+                    await InviteOrDeleteUser();
+                    return;
+                case "?/leave a group":
+                    var successLeave = await LeaveGroup();
+                    if (successLeave)
+                    {
+                        autoResetMessage.Set();
+                        throw new OperationCanceledException();
+                    }
+                    return;
+                case "?/end":
+                    autoResetMessage.Set();
+                    throw new OperationCanceledException();
             }
         }
         private async Task InviteOrDeleteUser()
@@ -114,15 +115,15 @@ namespace User_Client
                 if (typeNewGroup == "public" || typeNewGroup == "secret")
                 {
                     await communication.SendMessage(typeNewGroup);
-                    await communication.ListenServerWriteToSecondWindow(secondWindowServer);
+                    var message = await communication.ListenServerWriteToSecondWindow(secondWindowServer);
                     while (true)
                     {
                         var nameNewGroup = Console.ReadLine();
                         if (nameNewGroup.Length > 0)
                         {
                             await communication.SendMessage(nameNewGroup);
-                            await communication.ListenServerWriteToSecondWindow(secondWindowServer);
-                            if (communication.data.ToString() == $"New group have {typeNewGroup} type and name {nameNewGroup}")
+                            message = await communication.ListenServerWriteToSecondWindow(secondWindowServer);
+                            if (message == $"New group have {typeNewGroup} type and name {nameNewGroup}")
                             {
                                 ChangeTypeGroup(typeNewGroup);
                                 return;
@@ -133,11 +134,11 @@ namespace User_Client
                 }
                 else
                 {
-                    Console.WriteLine("Bed input\n\r" +
-                        "If you want to change the group type, press 'Enter'");
+                    Console.WriteLine("Bed input");
+                    Console.WriteLine("If you want to change the group type, press 'Enter'");
                     if (Console.ReadKey(true).Key == ConsoleKey.Enter)
                     {
-                        Console.WriteLine(communication.data);
+                        Console.WriteLine("Write need type");
                         continue;
                     }
                     Console.WriteLine("Okey, you can write the message");
@@ -167,7 +168,8 @@ namespace User_Client
                 return;
             }
             var fileName = Path.GetFileName(path);
-            await communication.SendFile(path, fileName);
+            await communication.SendMessage(fileName);
+            await communication.SendFile(path);
             await communication.ListenServerWriteToSecondWindow(secondWindowServer);
         }
         private async Task ReceiveFile()
@@ -178,7 +180,6 @@ namespace User_Client
                 if (fileName.Length > 0)
                 {
                     await communication.SendMessage(fileName);
-                    await communication.ListenServerWriteToSecondWindow(secondWindowServer);
                     await CheckFindedFile(fileName);
                     return;
                 }
@@ -186,20 +187,22 @@ namespace User_Client
         }
         private async Task CheckFindedFile(string fileName)
         {
-            if (communication.data.ToString() == "Finded")
+            var message = await communication.ListenServerWriteToSecondWindow(secondWindowServer);
+            if (message == "Finded")
             {
                 await FindNameAndRecive();
             }
-            else if (communication.data.ToString().Substring(0, 9) == "Have some")
+            else if (message == "Have some files")
             {
+                message = await communication.ListenServerWriteToSecondWindow(secondWindowServer);
                 while (true)
                 {
                     var dateFile = Console.ReadLine();
                     if (dateFile.Length > 0)
                     {
                         await communication.SendMessage(dateFile);
-                        await communication.ListenServerWriteToSecondWindow(secondWindowServer);
-                        if (communication.data.ToString() == "Finded")
+                        message = await communication.ListenServerWriteToSecondWindow(secondWindowServer);
+                        if (message == "Finded")
                         {
                             await FindNameAndRecive();
                         }
@@ -210,7 +213,6 @@ namespace User_Client
             async Task FindNameAndRecive()
             {
                 fileName = CheckFile(fileName);
-                await communication.SendMessage("ok");
                 await communication.ReciveFile($@"D:\temp\User\{fileName}");
             }
         }
@@ -257,6 +259,7 @@ namespace User_Client
                     }
                     else
                     {
+                        await communication.ListenServerWriteToSecondWindow(secondWindowServer);
                         return false;
                     }
                 }
@@ -268,8 +271,7 @@ namespace User_Client
         {
             while (true)
             {
-                await communication.ListenServer();
-                var message = communication.data.ToString();
+                var message = await communication.ListenServer();
                 secondWindowServer.Write(message);
                 autoResetMessage.WaitOne();
                 if (message == "?/you left the chat") //кожен раз створюється строка "?/you left the chat"
@@ -282,8 +284,7 @@ namespace User_Client
         }
         private async Task WriteMessages()
         {
-            await communication.ListenServer();
-            var count = Convert.ToInt32(communication.data.ToString());
+            var count = Convert.ToInt32(await communication.ListenServer());
             for (int i = 0; i < count; i++)
             {
                 secondWindowServer.Write(await communication.ListenServer());
